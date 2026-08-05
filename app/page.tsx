@@ -1,36 +1,39 @@
 import Image from "next/image";
+import DisclaimerModal from "./components/disclaimerModal";
 
 export default function LandingPage() {
   return (
-    <main className="min-h-screen bg-[#FAF8F5] px-6 py-16 md:py-24">
+    <main className="min-h-screen bg-[#FAF8F5] px-6 py-8 md:py-10">
+      <DisclaimerModal />
       <div className="mx-auto max-w-4xl text-center">
         {/* Logo */}
         <div className="flex flex-col items-center">
           <Image
             src="/cpdi-logo.png"
             alt="CCNY Career & Professional Development Institute logo"
-            width={560}
-            height={200}
+            width={440}
+            height={155}
             priority
           />
         </div>
 
         {/* Headline */}
-        <h1 className="mt-8 text-4xl font-extrabold leading-tight tracking-tight text-[#1A1523] md:text-6xl">
+        <h1 className="mt-4 text-4xl font-extrabold leading-tight tracking-tight text-[#1A1523] md:text-6xl">
           Get your cover letter
           <br />
-          internship-ready in minutes
+          internship and job ready in minutes
         </h1>
 
         {/* Subtext */}
-        <p className="mx-auto mt-6 max-w-2xl text-2xl leading-relaxed text-[#5B5468]">
-          Paste the job you want, upload your resume and draft, and get a
-          grade plus specific, encouraging feedback tailored to that role —
-          built for CCNY students.
+        <p className="mx-auto mt-4 max-w-2xl text-2xl leading-relaxed text-[#5B5468]">
+          Paste the job description, upload your resume and cover letter
+          draft, and receive a grade along with specific, encouraging
+          feedback tailored to the role—all designed with CCNY students in
+          mind.
         </p>
 
         {/* Steps */}
-        <div className="mt-14 grid gap-6 text-left md:grid-cols-3">
+        <div className="mt-8 grid gap-6 text-left md:grid-cols-3">
           <StepCard
             number={1}
             title="Paste & upload"
@@ -51,7 +54,7 @@ export default function LandingPage() {
         {/* CTA */}
         <a
           href="/optimize"
-          className="mt-12 inline-flex items-center gap-2 rounded-full bg-[#7C5CDB] px-8 py-4 text-base font-bold text-white transition hover:bg-[#6B4CC7]"
+          className="mt-8 inline-flex items-center gap-2 rounded-full bg-[#7C5CDB] px-12 py-7 text-xl font-bold text-white transition hover:bg-[#6B4CC7]"
         >
           Get Started
           <span aria-hidden="true">→</span>
