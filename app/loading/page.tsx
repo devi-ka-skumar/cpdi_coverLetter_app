@@ -1,4 +1,19 @@
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+
 export default function LoadingPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      router.push("/feedback");
+    }, 5000); // 5 seconds — placeholder until Gemini call replaces this
+
+    return () => clearTimeout(timer);
+  }, [router]);
+
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#FAF8F5] px-6">
       <div className="w-full max-w-md rounded-2xl bg-white p-10 text-center shadow-sm">
@@ -16,7 +31,6 @@ export default function LoadingPage() {
           and how well it lines up with the job description.
         </p>
 
-        {/* Indeterminate progress bar — duration is unknown until the AI is connected */}
         <div className="mt-8 h-2 w-full overflow-hidden rounded-full bg-[#EDE7FB]">
           <div className="h-full w-1/3 animate-pulse rounded-full bg-[#7C5CDB]" />
         </div>
