@@ -4,17 +4,24 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useCoverLetterContext } from "../context/CoverLetterContext";
 
 export default function OptimizePage() {
   const router = useRouter();
-  const [jobDescription, setJobDescription] = useState("");
-  const [resumeFile, setResumeFile] = useState<File | null>(null);
-  const [coverLetterFile, setCoverLetterFile] = useState<File | null>(null);
+  const {
+    jobDescription,
+    setJobDescription,
+    resumeFile,
+    setResumeFile,
+    coverLetterFile,
+    setCoverLetterFile,
+  } = useCoverLetterContext();
 
   function handleAnalyze() {
     // TODO: once the AI is connected, kick off the actual request here
-    // and navigate to /loading immediately, then redirect to the results
-    // page only once the response comes back — rather than a fixed delay.
+    // using jobDescription, resumeFile, and coverLetterFile from context,
+    // then navigate to /loading immediately and redirect to /feedback
+    // only once the response comes back.
     router.push("/loading");
   }
 
