@@ -1,10 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { useCoverLetterContext } from "../context/CoverLetterContext";
+import MoreServicesModal from "../components/moreServicesModal";
 
 export default function FeedbackPage() {
   const { analysisResult, analysisError } = useCoverLetterContext();
+  const [showMoreServices, setShowMoreServices] = useState(false);
 
   // No result and no error means someone landed here directly (refresh,
   // typed URL) without going through input -> loading first.
@@ -150,6 +153,27 @@ export default function FeedbackPage() {
           </div>
         </div>
       </div>
+
+      {/* More Services — persistent side tab */}
+      <button
+        type="button"
+        onClick={() => setShowMoreServices(true)}
+        aria-label="More Services from CPDI"
+        className="fixed right-0 top-1/2 z-40 flex -translate-y-1/2 items-center gap-2 rounded-l-2xl bg-[#7C5CDB] px-3 py-5 text-sm font-bold text-white shadow-lg transition hover:bg-[#6B4CC7] hover:px-4"
+      >
+        <span aria-hidden="true" className="text-base">
+          🎓
+        </span>
+        <span
+          className="[writing-mode:vertical-rl] rotate-180 tracking-wide"
+        >
+          More Services
+        </span>
+      </button>
+
+      {showMoreServices && (
+        <MoreServicesModal onClose={() => setShowMoreServices(false)} />
+      )}
     </main>
   );
 }

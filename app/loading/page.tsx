@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useCoverLetterContext } from "../context/CoverLetterContext";
 
@@ -10,20 +10,59 @@ export default function LoadingPage() {
     jobDescription,
     resumeFile,
     coverLetterFile,
+    analysisResult,
     setAnalysisResult,
+    analysisError,
     setAnalysisError,
+    lastAnalyzedFingerprint,
+    setLastAnalyzedFingerprint,
   } = useCoverLetterContext();
 
+  const [progress, setProgress] = useState(0);
+  const [elapsedMs, setElapsedMs] = useState(0);
+  const hasStarted = useRef(false); // guards against double-firing in dev/StrictMode or fast re-navigation
+
   useEffect(() => {
-    // If someone lands here directly without going through the input page,
-    // there's nothing to analyze — send them back rather than calling the
-    // API with empty data.
     if (!jobDescription || !resumeFile || !coverLetterFile) {
       router.push("/optimize");
       return;
     }
 
+    if (hasStarted.current) return;
+    hasStarted.current = true;
+
+    // Build a lightweight fingerprint of the current inputs — file name,
+    // size, and last-modified time, plus the job description text. This
+    // doesn't require re-reading file contents, just enough to detect
+    // "these are the exact same files/text as last time."
+    const currentFingerprint = `${jobDescription}|${resumeFile.name}-${resumeFile.size}-${resumeFile.lastModified}|${coverLetterFile.name}-${coverLetterFile.size}-${coverLetterFile.lastModified}`;
+
+    // If nothing changed since the last successful analysis, skip the API
+    // call entirely and just reuse what's already sitting in context —
+    // no server round-trip, no quota used, nothing new retained anywhere.
+    if (
+      analysisResult &&
+      !analysisError &&
+      lastAnalyzedFingerprint === currentFingerprint
+    ) {
+      setProgress(100);
+      setTimeout(() => router.push("/feedback"), 300);
+      return;
+    }
+
     let cancelled = false;
+
+    // Simulated progress: eases toward 90% over ~12 seconds, never
+    // reaching 100% on its own — only the real response completes it.
+    const progressInterval = setInterval(() => {
+      setElapsedMs((prev) => prev + 300);
+      setProgress((prev) => {
+        if (prev >= 90) return prev;
+        const remaining = 90 - prev;
+        const increment = Math.max(remaining * 0.08, 0.5);
+        return Math.min(prev + increment, 90);
+      });
+    }, 300);
 
     async function analyze() {
       try {
@@ -39,7 +78,8 @@ export default function LoadingPage() {
 
         const data = await res.json();
 
-        if (cancelled) return;
+        clearInterval(progressInterval);
+        setProgress(100);
 
         if (!res.ok) {
           setAnalysisError(data.error || "Something went wrong. Please try again.");
@@ -47,11 +87,15 @@ export default function LoadingPage() {
         } else {
           setAnalysisResult(data);
           setAnalysisError(null);
+          setLastAnalyzedFingerprint(currentFingerprint);
         }
 
-        router.push("/feedback");
+        // brief pause so the user sees the bar complete before navigating
+        setTimeout(() => {
+          router.push("/feedback");
+        }, 400);
       } catch (err) {
-        if (cancelled) return;
+        clearInterval(progressInterval);
         console.error("Failed to analyze cover letter:", err);
         setAnalysisError("Something went wrong. Please try again.");
         setAnalysisResult(null);
@@ -61,9 +105,11 @@ export default function LoadingPage() {
 
     analyze();
 
-    return () => {
-      cancelled = true;
-    };
+    // Intentionally no cleanup-based cancellation here. The hasStarted
+    // ref above already guarantees analyze() only ever runs once per
+    // real page visit — adding a cancelled flag tied to cleanup breaks
+    // this in React Strict Mode's dev-only double-invoke behavior,
+    // since the phantom first cleanup would cancel the one real request.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -85,8 +131,20 @@ export default function LoadingPage() {
         </p>
 
         <div className="mt-8 h-2 w-full overflow-hidden rounded-full bg-[#EDE7FB]">
-          <div className="h-full w-1/3 animate-pulse rounded-full bg-[#7C5CDB]" />
+          <div
+            className={`h-full rounded-full bg-[#7C5CDB] transition-all duration-300 ease-out ${
+              progress >= 90 ? "animate-pulse" : ""
+            }`}
+            style={{ width: `${progress}%` }}
+          />
         </div>
+
+        {elapsedMs >= 20000 && (
+          <p className="mt-3 text-sm text-[#9B96A8]">
+            Almost there — still working behind the scenes, this can take a
+            little longer for detailed feedback.
+          </p>
+        )}
 
         <div className="mt-8 rounded-xl bg-[#F3EFFC] px-4 py-3 text-sm text-[#5B5468]">
           💡 Tip: even strong drafts usually get 2–3 suggestions — that&apos;s

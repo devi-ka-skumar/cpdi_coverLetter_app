@@ -4,6 +4,30 @@ import { extractTextFromFile } from "../../../lib/extractText";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
+// Tried in order — if one is rate-limited (429), we fall through to the
+// next rather than failing the student's request outright. Each model may
+// grade very slightly differently despite identical prompt/temperature/seed,
+// which is a known trade-off in exchange for reliability.
+//
+// Ordered with mainline Flash models first (most similar grading quality
+// to each other), then "Lite" models last as a high-capacity safety net —
+// Lite models trade some quality for much higher daily quotas (500 RPD
+// vs 20 RPD), so they're the last resort rather than the first choice.
+
+const MODEL_FALLBACK_CHAIN = [
+  "gemini-3.6-flash",
+  "gemini-3.5-flash",
+  "gemini-3-flash",
+  "gemini-2.5-flash",
+  "gemini-2.5-flash-lite",
+  "gemini-3.1-flash-lite",
+  "gemini-3.5-flash-lite",
+];
+
+// Dev-only cache so repeated identical test runs don't burn API quota.
+// Resets whenever the dev server restarts. Never active in production.
+const devCache = new Map<string, any>();
+
 const SYSTEM_PROMPT = `
 You are an expert career advisor helping college students improve their cover
 letters before applying to internships and jobs. You will be given a student's
@@ -120,23 +144,72 @@ export async function POST(req: Request) {
       );
     }
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3.6-flash",
-      config: {
-        systemInstruction: SYSTEM_PROMPT,
-        responseMimeType: "application/json",
-      },
-      contents: [
-        {
-          role: "user",
-          parts: [
-            {
-              text: `JOB DESCRIPTION:\n${jobDescription}\n\nRESUME:\n${resumeText}\n\nCOVER LETTER:\n${coverLetterText}`,
+    const cacheKey = `${jobDescription}|${resumeText}|${coverLetterText}`;
+    if (process.env.NODE_ENV === "development" && devCache.has(cacheKey)) {
+      console.log("Serving cached result (dev mode, no API call made)");
+      return NextResponse.json(devCache.get(cacheKey));
+    }
+
+    let response;
+    let lastError;
+    let modelUsed: string | null = null;
+    const maxRetriesPerModel = 1; // retries within the SAME model for transient 503s only
+
+    outer: for (const model of MODEL_FALLBACK_CHAIN) {
+      for (let attempt = 0; attempt <= maxRetriesPerModel; attempt++) {
+        try {
+          response = await ai.models.generateContent({
+            model,
+            config: {
+              systemInstruction: SYSTEM_PROMPT,
+              responseMimeType: "application/json",
+              temperature: 0,
+              seed: 42,
             },
-          ],
-        },
-      ],
-    });
+            contents: [
+              {
+                role: "user",
+                parts: [
+                  {
+                    text: `JOB DESCRIPTION:\n${jobDescription}\n\nRESUME:\n${resumeText}\n\nCOVER LETTER:\n${coverLetterText}`,
+                  },
+                ],
+              },
+            ],
+          });
+          modelUsed = model;
+          break outer; // success — stop entirely
+        } catch (apiErr: any) {
+          lastError = apiErr;
+          const status = apiErr?.status || apiErr?.error?.status;
+          const isRateLimited = status === 429 || status === "RESOURCE_EXHAUSTED";
+          const isOverloaded = status === 503 || status === "UNAVAILABLE";
+
+          if (isRateLimited) {
+            // This model's quota is exhausted — move to the next model
+            // immediately, don't waste a retry on the same one.
+            console.warn(`${model} rate-limited, falling back to next model`);
+            break;
+          }
+
+          if (isOverloaded && attempt < maxRetriesPerModel) {
+            // Transient overload — brief backoff, retry same model once.
+            await new Promise((resolve) => setTimeout(resolve, 1000 * (attempt + 1)));
+            continue;
+          }
+
+          // Non-retryable error, or retries exhausted on this model —
+          // still try the next model in the chain rather than giving up.
+          break;
+        }
+      }
+    }
+
+    if (!response) {
+      throw lastError;
+    }
+
+    console.log(`Analysis completed using model: ${modelUsed}`);
 
     const rawText = response.text ?? "";
     const cleaned = rawText.replace(/```json|```/g, "").trim();
@@ -152,9 +225,38 @@ export async function POST(req: Request) {
       );
     }
 
+    if (process.env.NODE_ENV === "development") {
+      devCache.set(cacheKey, parsed);
+    }
+
     return NextResponse.json(parsed);
-  } catch (err) {
+  } catch (err: any) {
     console.error("Gemini API error:", err);
+
+    const status = err?.status || err?.error?.status;
+    const isOverloaded = status === 503 || status === "UNAVAILABLE";
+    const isRateLimited = status === 429 || status === "RESOURCE_EXHAUSTED";
+
+    if (isRateLimited) {
+      return NextResponse.json(
+        {
+          error:
+            "We've hit today's testing limit across all available AI models. Please wait about a minute before trying again.",
+        },
+        { status: 429 }
+      );
+    }
+
+    if (isOverloaded) {
+      return NextResponse.json(
+        {
+          error:
+            "Our AI service is experiencing high demand right now. Please try again in a moment.",
+        },
+        { status: 503 }
+      );
+    }
+
     return NextResponse.json(
       { error: "Failed to analyze cover letter" },
       { status: 500 }

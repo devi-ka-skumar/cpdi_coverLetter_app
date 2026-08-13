@@ -30,6 +30,8 @@ type CoverLetterContextType = {
   setAnalysisResult: (result: AnalysisResult | null) => void;
   analysisError: string | null;
   setAnalysisError: (error: string | null) => void;
+  lastAnalyzedFingerprint: string | null;
+  setLastAnalyzedFingerprint: (fingerprint: string | null) => void;
 };
 
 const CoverLetterContext = createContext<CoverLetterContextType | null>(null);
@@ -42,6 +44,9 @@ export function CoverLetterProvider({ children }: { children: ReactNode }) {
     null
   );
   const [analysisError, setAnalysisError] = useState<string | null>(null);
+  const [lastAnalyzedFingerprint, setLastAnalyzedFingerprint] = useState<
+    string | null
+  >(null);
 
   return (
     <CoverLetterContext.Provider
@@ -56,6 +61,8 @@ export function CoverLetterProvider({ children }: { children: ReactNode }) {
         setAnalysisResult,
         analysisError,
         setAnalysisError,
+        lastAnalyzedFingerprint,
+        setLastAnalyzedFingerprint,
       }}
     >
       {children}

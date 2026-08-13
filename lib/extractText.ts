@@ -1,7 +1,7 @@
 import mammoth from "mammoth";
-// pdf-parse doesn't ship types cleanly for ESM — require works fine at runtime
+// pdf-parse v2 exports a PDFParse class, not a plain function (v1 API).
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const pdfParse = require("pdf-parse");
+const { PDFParse } = require("pdf-parse");
 
 /**
  * Extracts plain text from an uploaded PDF or DOCX File.
@@ -19,8 +19,13 @@ export async function extractTextFromFile(file: File): Promise<string> {
   }
 
   if (fileName.endsWith(".pdf")) {
-    const result = await pdfParse(buffer);
-    return result.text.trim();
+    const parser = new PDFParse({ data: buffer });
+    try {
+      const result = await parser.getText();
+      return result.text.trim();
+    } finally {
+      await parser.destroy();
+    }
   }
 
   throw new Error(
