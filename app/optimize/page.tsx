@@ -3,8 +3,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useCoverLetterContext } from "../context/CoverLetterContext";
+import {
+  canAnalyze,
+  recordAttempt,
+  getRemainingAttempts,
+  getTimeUntilNextSlot,
+} from "../../lib/rateLimiter";
 
 export default function OptimizePage() {
   const router = useRouter();
@@ -17,7 +23,26 @@ export default function OptimizePage() {
     setCoverLetterFile,
   } = useCoverLetterContext();
 
+  const [remaining, setRemaining] = useState(5);
+  const [limitReached, setLimitReached] = useState(false);
+  const [waitTime, setWaitTime] = useState("");
+
+  useEffect(() => {
+    // Runs client-side only, after mount, since localStorage isn't
+    // available during server rendering.
+    setRemaining(getRemainingAttempts());
+    setLimitReached(!canAnalyze());
+    setWaitTime(getTimeUntilNextSlot());
+  }, []);
+
   function handleAnalyze() {
+    if (!canAnalyze()) {
+      setLimitReached(true);
+      setWaitTime(getTimeUntilNextSlot());
+      return;
+    }
+
+    recordAttempt();
     // TODO: once the AI is connected, kick off the actual request here
     // using jobDescription, resumeFile, and coverLetterFile from context,
     // then navigate to /loading immediately and redirect to /feedback
@@ -90,16 +115,32 @@ export default function OptimizePage() {
       </div>
 
       {/* CTA */}
-      <div className="mt-10 flex justify-center">
-        <button
-          type="button"
-          onClick={handleAnalyze}
-          disabled={!jobDescription || !resumeFile || !coverLetterFile}
-          className="inline-flex items-center gap-2 rounded-full bg-[#7C5CDB] px-8 py-4 text-base font-bold text-white transition hover:bg-[#6B4CC7] disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          Analyze My Cover Letter
-          <span aria-hidden="true">→</span>
-        </button>
+      <div className="mt-10 flex flex-col items-center gap-3">
+        {limitReached ? (
+          <div className="max-w-md rounded-xl bg-[#FBF0E3] px-5 py-4 text-center">
+            <p className="text-sm font-bold text-[#B4711F]">
+              You've reached today's limit of 5 tries.
+            </p>
+            <p className="mt-1 text-sm text-[#5B5468]">
+              Come back in about {waitTime} to submit again.
+            </p>
+          </div>
+        ) : (
+          <>
+            <button
+              type="button"
+              onClick={handleAnalyze}
+              disabled={!jobDescription || !resumeFile || !coverLetterFile}
+              className="inline-flex items-center gap-2 rounded-full bg-[#7C5CDB] px-8 py-4 text-base font-bold text-white transition hover:bg-[#6B4CC7] disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Analyze My Cover Letter
+              <span aria-hidden="true">→</span>
+            </button>
+            <p className="text-xs text-[#9B96A8]">
+              {remaining} of 5 tries remaining today
+            </p>
+          </>
+        )}
       </div>
     </main>
   );
