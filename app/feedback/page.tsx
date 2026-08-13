@@ -1,13 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useCoverLetterContext } from "../context/CoverLetterContext";
 import MoreServicesModal from "../components/moreServicesModal";
+import { getRemainingAttempts } from "../../lib/rateLimiter";
 
 export default function FeedbackPage() {
   const { analysisResult, analysisError } = useCoverLetterContext();
   const [showMoreServices, setShowMoreServices] = useState(false);
+  const [remaining, setRemaining] = useState(5);
+
+  useEffect(() => {
+    // Client-side only, since localStorage isn't available during SSR.
+    setRemaining(getRemainingAttempts());
+  }, []);
 
   // No result and no error means someone landed here directly (refresh,
   // typed URL) without going through input -> loading first.
@@ -75,6 +82,9 @@ export default function FeedbackPage() {
       <h1 className="mt-6 text-4xl font-extrabold tracking-tight text-[#1A1523]">
         Your Results
       </h1>
+      <p className="mt-1 text-sm text-[#9B96A8]">
+        {remaining} of 5 tries remaining today
+      </p>
 
       <div className="mt-8 grid gap-6 md:grid-cols-2">
         {/* Cover Letter Strategy */}
