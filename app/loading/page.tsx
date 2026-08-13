@@ -2,17 +2,70 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useCoverLetterContext } from "../context/CoverLetterContext";
 
 export default function LoadingPage() {
   const router = useRouter();
+  const {
+    jobDescription,
+    resumeFile,
+    coverLetterFile,
+    setAnalysisResult,
+    setAnalysisError,
+  } = useCoverLetterContext();
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      router.push("/feedback");
-    }, 5000); // 5 seconds — placeholder until Gemini call replaces this
+    // If someone lands here directly without going through the input page,
+    // there's nothing to analyze — send them back rather than calling the
+    // API with empty data.
+    if (!jobDescription || !resumeFile || !coverLetterFile) {
+      router.push("/optimize");
+      return;
+    }
 
-    return () => clearTimeout(timer);
-  }, [router]);
+    let cancelled = false;
+
+    async function analyze() {
+      try {
+        const formData = new FormData();
+        formData.append("jobDescription", jobDescription);
+        formData.append("resumeFile", resumeFile as File);
+        formData.append("coverLetterFile", coverLetterFile as File);
+
+        const res = await fetch("/api/analyze-cover-letter", {
+          method: "POST",
+          body: formData,
+        });
+
+        const data = await res.json();
+
+        if (cancelled) return;
+
+        if (!res.ok) {
+          setAnalysisError(data.error || "Something went wrong. Please try again.");
+          setAnalysisResult(null);
+        } else {
+          setAnalysisResult(data);
+          setAnalysisError(null);
+        }
+
+        router.push("/feedback");
+      } catch (err) {
+        if (cancelled) return;
+        console.error("Failed to analyze cover letter:", err);
+        setAnalysisError("Something went wrong. Please try again.");
+        setAnalysisResult(null);
+        router.push("/feedback");
+      }
+    }
+
+    analyze();
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#FAF8F5] px-6">
