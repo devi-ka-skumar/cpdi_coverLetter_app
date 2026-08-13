@@ -56,7 +56,6 @@ Provide the response in this EXACT format:
 ## ✅ Must-Haves
 ✓ Mention [specific requirement from the job]
 ✓ Connect to company's [specific mission or value, or recommend researching it]
-✓ Keep under 300 words
 
 Be ULTRA CONCISE.
 `;
