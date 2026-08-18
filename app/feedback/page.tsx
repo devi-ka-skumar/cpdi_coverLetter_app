@@ -51,10 +51,23 @@ export default function FeedbackPage() {
         buttonHref="/optimize"
       />
     );
+  } else if (analysisResult?.invalidJobDescription === true) {
+    errorModal = (
+      <ErrorModal
+        title="Invalid job description"
+        message={
+          analysisResult.message ||
+          "This doesn't look like a real job description. Please paste the actual job posting to get accurate feedback."
+        }
+        buttonText="Go to Cover Letter Optimizer"
+        buttonHref="/optimize"
+      />
+    );
   }
 
   const r = analysisResult;
-  const hasValidResult = r && r.hasCoverLetterDraft !== false;
+  const hasValidResult =
+    r && r.hasCoverLetterDraft !== false && r.invalidJobDescription !== true;
 
   return (
     <main className="min-h-screen bg-[#FAF8F5] px-6 py-12 md:px-16">
@@ -95,181 +108,187 @@ export default function FeedbackPage() {
           </p>
 
           <div className="mt-8 grid gap-6 md:grid-cols-2">
-        {/* Cover Letter Strategy */}
-        <div className="rounded-2xl bg-white p-8 shadow-sm">
-          <h2 className="text-xl font-bold text-[#1A1523]">
-            Cover Letter Strategy
-          </h2>
+            {/* Cover Letter Strategy */}
+            <div className="rounded-2xl bg-white p-8 shadow-sm">
+              <h2 className="text-xl font-bold text-[#1A1523]">
+                Cover Letter Strategy
+              </h2>
 
-          <p className="mt-6 text-xs font-bold tracking-wide text-[#7C5CDB]">
-            HIGHLIGHT THESE 3 THINGS
-          </p>
-          <ol className="mt-3 space-y-3">
-            {r.strategy?.highlights.map((item, i) => (
-              <li key={i} className="flex gap-3 text-sm text-[#1A1523]">
-                <span className="flex h-6 w-6 flex-none items-center justify-center rounded-full bg-[#EDE7FB] text-xs font-bold text-[#7C5CDB]">
-                  {i + 1}
-                </span>
-                <span className="pt-0.5">{item}</span>
-              </li>
-            ))}
-          </ol>
+              <p className="mt-6 text-xs font-bold tracking-wide text-[#7C5CDB]">
+                HIGHLIGHT THESE 3 THINGS
+              </p>
+              <ol className="mt-3 space-y-3">
+                {r.strategy?.highlights.map((item, i) => (
+                  <li key={i} className="flex gap-3 text-sm text-[#1A1523]">
+                    <span className="flex h-6 w-6 flex-none items-center justify-center rounded-full bg-[#EDE7FB] text-xs font-bold text-[#7C5CDB]">
+                      {i + 1}
+                    </span>
+                    <span className="pt-0.5">{item}</span>
+                  </li>
+                ))}
+              </ol>
 
-          <p className="mt-6 text-xs font-bold tracking-wide text-[#7C5CDB]">
-            ADDRESS THESE GAPS
-          </p>
-          <div className="mt-3 space-y-3">
-            {r.strategy?.addressTheseGaps.map((item, i) => (
-              <div key={i} className="rounded-xl bg-[#F3EFFC] p-4">
-                <p className="text-sm text-[#5B5468]">{item.gap}</p>
-                <p className="mt-1 text-sm text-[#9B96A8]">↓</p>
-                <p className="mt-1 text-sm font-bold text-[#1A1523]">
-                  {item.fix}
-                </p>
+              <p className="mt-6 text-xs font-bold tracking-wide text-[#7C5CDB]">
+                ADDRESS THESE GAPS
+              </p>
+              <div className="mt-3 space-y-3">
+                {r.strategy?.addressTheseGaps.map((item, i) => (
+                  <div key={i} className="rounded-xl bg-[#F3EFFC] p-4">
+                    <p className="text-sm text-[#5B5468]">{item.gap}</p>
+                    <p className="mt-1 text-sm text-[#9B96A8]">↓</p>
+                    <p className="mt-1 text-sm font-bold text-[#1A1523]">
+                      {item.fix}
+                    </p>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
 
-          <p className="mt-6 text-xs font-bold tracking-wide text-[#7C5CDB]">
-            COVER LETTER BLUEPRINT
-          </p>
-          <div className="mt-3 space-y-2 text-sm">
-            <BlueprintRow label="Tone" value={r.strategy?.blueprint.tone ?? ""} />
-            <BlueprintRow
-              label="Opening"
-              value={r.strategy?.blueprint.opening ?? ""}
-            />
-            <BlueprintRow label="Focus" value={r.strategy?.blueprint.focus ?? ""} />
-          </div>
+              <p className="mt-6 text-xs font-bold tracking-wide text-[#7C5CDB]">
+                COVER LETTER BLUEPRINT
+              </p>
+              <div className="mt-3 space-y-2 text-sm">
+                <BlueprintRow
+                  label="Tone"
+                  value={r.strategy?.blueprint.tone ?? ""}
+                />
+                <BlueprintRow
+                  label="Opening"
+                  value={r.strategy?.blueprint.opening ?? ""}
+                />
+                <BlueprintRow
+                  label="Focus"
+                  value={r.strategy?.blueprint.focus ?? ""}
+                />
+              </div>
 
-          <p className="mt-6 text-xs font-bold tracking-wide text-[#7C5CDB]">
-            MUST-HAVES
-          </p>
-          <ul className="mt-3 space-y-1.5">
-            {r.strategy?.mustHaves.map((item, i) => (
-              <li key={i} className="text-sm text-[#1A1523]">
-                ✓ {item}
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* Grade My Cover Letter */}
-        <div className="rounded-2xl bg-white p-8 shadow-sm">
-          <h2 className="text-xl font-bold text-[#1A1523]">
-            Grade My Cover Letter
-          </h2>
-
-          <ScoreRing score={r.score ?? 0} />
-
-          {r.categoryScores && (
-            <div className="mt-6 space-y-2">
-              <CategoryRow
-                label="Job Match"
-                score={r.categoryScores.jobMatch}
-                max={25}
-              />
-              <CategoryRow
-                label="Resume Alignment"
-                score={r.categoryScores.resumeAlignment}
-                max={20}
-              />
-              <CategoryRow
-                label="Template Structure"
-                score={r.categoryScores.templateStructure}
-                max={20}
-              />
-              <CategoryRow
-                label="Clarity, Grammar & Impact"
-                score={r.categoryScores.clarityGrammarImpact}
-                max={20}
-              />
-              <CategoryRow
-                label="Professional Tone"
-                score={r.categoryScores.professionalTone}
-                max={15}
-              />
+              <p className="mt-6 text-xs font-bold tracking-wide text-[#7C5CDB]">
+                MUST-HAVES
+              </p>
+              <ul className="mt-3 space-y-1.5">
+                {r.strategy?.mustHaves.map((item, i) => (
+                  <li key={i} className="text-sm text-[#1A1523]">
+                    ✓ {item}
+                  </li>
+                ))}
+              </ul>
             </div>
-          )}
 
-          <div className="mt-6 rounded-xl bg-[#EAF7EE] p-4">
-            <p className="text-xs font-bold tracking-wide text-[#2F9E5B]">
-              KEEP DOING THIS
-            </p>
-            <p className="mt-2 text-sm text-[#1A1523]">
-              {r.grade?.keepDoingThis.map((item, i) => (
-                <span key={i}>
-                  ✓ {item}
-                  {i < (r.grade?.keepDoingThis.length ?? 0) - 1 && " · "}
-                </span>
-              ))}
-            </p>
-          </div>
+            {/* Grade My Cover Letter */}
+            <div className="rounded-2xl bg-white p-8 shadow-sm">
+              <h2 className="text-xl font-bold text-[#1A1523]">
+                Grade My Cover Letter
+              </h2>
 
-          <div className="mt-4 space-y-3">
-            <p className="text-xs font-bold tracking-wide text-[#B4711F]">
-              FIX IMMEDIATELY
-            </p>
-            {r.grade?.fixImmediately.map((item, i) => (
-              <div key={i} className="rounded-xl bg-[#FBF0E3] p-4">
-                <p className="text-sm text-[#1A1523]">{item.problem}</p>
-                <p className="mt-1 text-sm text-[#9B96A8]">→</p>
-                <p className="mt-1 text-sm font-bold text-[#1A1523]">
-                  {item.fix}
+              <ScoreRing score={r.score ?? 0} />
+
+              {r.categoryScores && (
+                <div className="mt-6 space-y-2">
+                  <CategoryRow
+                    label="Job Match"
+                    score={r.categoryScores.jobMatch}
+                    max={25}
+                  />
+                  <CategoryRow
+                    label="Resume Alignment"
+                    score={r.categoryScores.resumeAlignment}
+                    max={20}
+                  />
+                  <CategoryRow
+                    label="Template Structure"
+                    score={r.categoryScores.templateStructure}
+                    max={20}
+                  />
+                  <CategoryRow
+                    label="Clarity, Grammar & Impact"
+                    score={r.categoryScores.clarityGrammarImpact}
+                    max={20}
+                  />
+                  <CategoryRow
+                    label="Professional Tone"
+                    score={r.categoryScores.professionalTone}
+                    max={15}
+                  />
+                </div>
+              )}
+
+              <div className="mt-6 rounded-xl bg-[#EAF7EE] p-4">
+                <p className="text-xs font-bold tracking-wide text-[#2F9E5B]">
+                  KEEP DOING THIS
+                </p>
+                <p className="mt-2 text-sm text-[#1A1523]">
+                  {r.grade?.keepDoingThis.map((item, i) => (
+                    <span key={i}>
+                      ✓ {item}
+                      {i < (r.grade?.keepDoingThis.length ?? 0) - 1 && " · "}
+                    </span>
+                  ))}
                 </p>
               </div>
-            ))}
-          </div>
 
-          <p className="mt-6 text-xs font-bold tracking-wide text-[#9B96A8]">
-            SPELLING & GRAMMAR
-          </p>
-          {r.grade?.spellingGrammar.length ? (
-            <div className="mt-3 space-y-1.5">
-              {r.grade.spellingGrammar.map((item, i) => (
-                <p key={i} className="text-sm text-[#1A1523]">
-                  <span className="text-[#B4711F] line-through">
-                    {item.incorrect}
-                  </span>{" "}
-                  → <span className="font-bold">{item.correction}</span>
+              <div className="mt-4 space-y-3">
+                <p className="text-xs font-bold tracking-wide text-[#B4711F]">
+                  FIX IMMEDIATELY
                 </p>
-              ))}
+                {r.grade?.fixImmediately.map((item, i) => (
+                  <div key={i} className="rounded-xl bg-[#FBF0E3] p-4">
+                    <p className="text-sm text-[#1A1523]">{item.problem}</p>
+                    <p className="mt-1 text-sm text-[#9B96A8]">→</p>
+                    <p className="mt-1 text-sm font-bold text-[#1A1523]">
+                      {item.fix}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              <p className="mt-6 text-xs font-bold tracking-wide text-[#9B96A8]">
+                SPELLING & GRAMMAR
+              </p>
+              {r.grade?.spellingGrammar.length ? (
+                <div className="mt-3 space-y-1.5">
+                  {r.grade.spellingGrammar.map((item, i) => (
+                    <p key={i} className="text-sm text-[#1A1523]">
+                      <span className="text-[#B4711F] line-through">
+                        {item.incorrect}
+                      </span>{" "}
+                      → <span className="font-bold">{item.correction}</span>
+                    </p>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-3 text-sm text-[#2F9E5B]">
+                  ✓ No spelling or grammar errors found.
+                </p>
+              )}
+
+              <p className="mt-6 text-xs font-bold tracking-wide text-[#9B96A8]">
+                TEMPLATE SCORE
+              </p>
+              <div className="mt-3 space-y-2">
+                {r.grade?.templateScore.map((item) => (
+                  <div
+                    key={item.label}
+                    className="flex items-center justify-between text-sm text-[#1A1523]"
+                  >
+                    <span>{item.label}</span>
+                    {item.met ? (
+                      <span className="text-[#2F9E5B]">☑</span>
+                    ) : (
+                      <span className="text-[#9B96A8]">☐</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-6 rounded-xl bg-[#F3EFFC] p-4">
+                <p className="text-xs font-bold tracking-wide text-[#7C5CDB]">
+                  DO THIS NOW
+                </p>
+                <p className="mt-2 text-sm font-bold text-[#1A1523]">
+                  {r.grade?.doThisNow}
+                </p>
+              </div>
             </div>
-          ) : (
-            <p className="mt-3 text-sm text-[#2F9E5B]">
-              ✓ No spelling or grammar errors found.
-            </p>
-          )}
-
-          <p className="mt-6 text-xs font-bold tracking-wide text-[#9B96A8]">
-            TEMPLATE SCORE
-          </p>
-          <div className="mt-3 space-y-2">
-            {r.grade?.templateScore.map((item) => (
-              <div
-                key={item.label}
-                className="flex items-center justify-between text-sm text-[#1A1523]"
-              >
-                <span>{item.label}</span>
-                {item.met ? (
-                  <span className="text-[#2F9E5B]">☑</span>
-                ) : (
-                  <span className="text-[#9B96A8]">☐</span>
-                )}
-              </div>
-            ))}
           </div>
-
-          <div className="mt-6 rounded-xl bg-[#F3EFFC] p-4">
-            <p className="text-xs font-bold tracking-wide text-[#7C5CDB]">
-              DO THIS NOW
-            </p>
-            <p className="mt-2 text-sm font-bold text-[#1A1523]">
-              {r.grade?.doThisNow}
-            </p>
-          </div>
-        </div>
-        </div>
         </>
       )}
 

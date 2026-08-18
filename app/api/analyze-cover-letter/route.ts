@@ -80,6 +80,19 @@ Respond ONLY with this exact JSON:
 Do not attempt to grade or provide strategy if there is no draft.
 
 =====================================================
+IF THE JOB DESCRIPTION IS MISSING, TOO SHORT, OR NOT A REAL JOB POSTING
+=====================================================
+
+If the job description is gibberish, random characters, unrelated to any
+real job posting, or too short to represent an actual job (fewer than
+roughly 20 words of real content), respond ONLY with this exact JSON:
+{ "hasCoverLetterDraft": true, "invalidJobDescription": true, "message": "This doesn't look like a real job description. Please paste the actual job posting to get accurate feedback." }
+
+Do not attempt to score Job Match or any other category against an
+invalid job description — a low score on real content is honest
+feedback, but a score against fake input is meaningless and misleading.
+
+=====================================================
 SCORING RUBRIC (100 points total) — only when a draft IS provided
 =====================================================
 

@@ -4,6 +4,7 @@ import { createContext, useContext, useState, ReactNode } from "react";
 
 export type AnalysisResult = {
   hasCoverLetterDraft: boolean;
+  invalidJobDescription?: boolean;
   message?: string; // only present when hasCoverLetterDraft is false
   score?: number;
   categoryScores?: {
