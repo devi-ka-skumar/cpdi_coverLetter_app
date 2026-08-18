@@ -6,8 +6,20 @@ export default function LandingPage() {
     <main className="min-h-screen bg-[#FAF8F5] px-6 py-8 md:py-10">
       <DisclaimerModal />
       <div className="mx-auto max-w-4xl text-center">
+        {/* Career Connections link */}
+        <div className="flex justify-center">
+          <a
+            href="https://ccny-csm.symplicity.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-full bg-[#EDE7FB] px-4 py-2 text-sm font-bold text-[#7C5CDB]"
+          >
+            🔗 Career Connections
+          </a>
+        </div>
+
         {/* Logo */}
-        <div className="flex flex-col items-center">
+        <div className="mt-6 flex flex-col items-center">
           <Image
             src="/cpdi-logo.png"
             alt="CCNY Career & Professional Development Institute logo"
