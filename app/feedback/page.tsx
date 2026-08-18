@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useCoverLetterContext } from "../context/CoverLetterContext";
 import MoreServicesModal from "../components/moreServicesModal";
+import ErrorModal from "../components/errorModal";
 import { getRemainingAttempts } from "../../lib/rateLimiter";
 
 export default function FeedbackPage() {
@@ -15,73 +16,50 @@ export default function FeedbackPage() {
     setRemaining(getRemainingAttempts());
   }, []);
 
-  // No result and no error means someone landed here directly (refresh,
-  // typed URL) without going through input -> loading first.
+  // Determine which (if any) error modal to show, without early-returning
+  // out of the whole page. The normal page shell below still renders —
+  // the modal overlays on top of it, matching disclaimerModal/
+  // moreServicesModal's pattern instead of swapping the page out entirely.
+  let errorModal: React.ReactNode = null;
+
   if (!analysisResult && !analysisError) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-[#FAF8F5] px-6">
-        <div className="w-full max-w-md rounded-2xl bg-white p-10 text-center shadow-sm">
-          <h1 className="text-2xl font-extrabold text-[#1A1523]">
-            No results to show yet
-          </h1>
-          <p className="mt-3 text-base text-[#5B5468]">
-            Looks like you navigated here directly. Head back to submit your
-            cover letter for feedback.
-          </p>
-          <Link
-            href="/optimize"
-            className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#7C5CDB] px-6 py-3 text-sm font-bold text-white"
-          >
-            Go to Cover Letter Optimizer
-          </Link>
-        </div>
-      </main>
+    // Someone landed here directly (refresh, typed URL) without going
+    // through input -> loading first.
+    errorModal = (
+      <ErrorModal
+        title="No results to show yet"
+        message="Looks like you navigated here directly. Head back to submit your cover letter for feedback."
+        buttonText="Go to Cover Letter Optimizer"
+        buttonHref="/optimize"
+      />
+    );
+  } else if (analysisError) {
+    errorModal = (
+      <ErrorModal
+        title="Something went wrong"
+        message={analysisError}
+        buttonText="Try Again"
+        buttonHref="/optimize"
+      />
+    );
+  } else if (analysisResult?.hasCoverLetterDraft === false) {
+    errorModal = (
+      <ErrorModal
+        title={analysisResult.message || "Upload your cover letter draft to get graded!"}
+        message="We didn't detect a cover letter draft in what was submitted."
+        buttonText="Go to Cover Letter Optimizer"
+        buttonHref="/optimize"
+      />
     );
   }
 
-  if (analysisError) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-[#FAF8F5] px-6">
-        <div className="w-full max-w-md rounded-2xl bg-white p-10 text-center shadow-sm">
-          <h1 className="text-2xl font-extrabold text-[#1A1523]">
-            Something went wrong
-          </h1>
-          <p className="mt-3 text-base text-[#5B5468]">{analysisError}</p>
-          <Link
-            href="/optimize"
-            className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#7C5CDB] px-6 py-3 text-sm font-bold text-white"
-          >
-            Try Again
-          </Link>
-        </div>
-      </main>
-    );
-  }
-
-  const r = analysisResult!;
-
-  // The AI itself determined there's no real draft to grade (edge case —
-  // the input page should prevent this, but the prompt has this fallback).
-  if (r.hasCoverLetterDraft === false) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-[#FAF8F5] px-6">
-        <div className="w-full max-w-md rounded-2xl bg-white p-10 text-center shadow-sm">
-          <h1 className="text-2xl font-extrabold text-[#1A1523]">
-            📄 {r.message || "Upload your cover letter draft to get graded!"}
-          </h1>
-          <Link
-            href="/optimize"
-            className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#7C5CDB] px-6 py-3 text-sm font-bold text-white"
-          >
-            Go to Cover Letter Optimizer
-          </Link>
-        </div>
-      </main>
-    );
-  }
+  const r = analysisResult;
+  const hasValidResult = r && r.hasCoverLetterDraft !== false;
 
   return (
     <main className="min-h-screen bg-[#FAF8F5] px-6 py-12 md:px-16">
+      {errorModal}
+
       {/* Top nav pills */}
       <div className="flex gap-3">
         <Link
@@ -109,11 +87,14 @@ export default function FeedbackPage() {
       <h1 className="mt-6 text-4xl font-extrabold tracking-tight text-[#1A1523]">
         Your Results
       </h1>
-      <p className="mt-1 text-sm text-[#9B96A8]">
-        {remaining} of 5 tries remaining today
-      </p>
 
-      <div className="mt-8 grid gap-6 md:grid-cols-2">
+      {hasValidResult && r && (
+        <>
+          <p className="mt-1 text-sm text-[#9B96A8]">
+            {remaining} of 5 tries remaining today
+          </p>
+
+          <div className="mt-8 grid gap-6 md:grid-cols-2">
         {/* Cover Letter Strategy */}
         <div className="rounded-2xl bg-white p-8 shadow-sm">
           <h2 className="text-xl font-bold text-[#1A1523]">
@@ -288,25 +269,31 @@ export default function FeedbackPage() {
             </p>
           </div>
         </div>
-      </div>
+        </div>
+        </>
+      )}
 
-      {/* More Services — persistent side tab */}
-      <button
-        type="button"
-        onClick={() => setShowMoreServices(true)}
-        aria-label="More Services from CPDI"
-        className="fixed right-0 top-1/2 z-40 flex -translate-y-1/2 items-center gap-2 rounded-l-2xl bg-[#7C5CDB] px-3 py-5 text-sm font-bold text-white shadow-lg transition hover:bg-[#6B4CC7] hover:px-4"
-      >
-        <span aria-hidden="true" className="text-base">
-          🎓
-        </span>
-        <span className="[writing-mode:vertical-rl] rotate-180 tracking-wide">
-          More Services
-        </span>
-      </button>
+      {/* More Services — persistent side tab, only when there's a real result to view */}
+      {hasValidResult && (
+        <>
+          <button
+            type="button"
+            onClick={() => setShowMoreServices(true)}
+            aria-label="More Services from CPDI"
+            className="fixed right-0 top-1/2 z-40 flex -translate-y-1/2 items-center gap-2 rounded-l-2xl bg-[#7C5CDB] px-3 py-5 text-sm font-bold text-white shadow-lg transition hover:bg-[#6B4CC7] hover:px-4"
+          >
+            <span aria-hidden="true" className="text-base">
+              🎓
+            </span>
+            <span className="[writing-mode:vertical-rl] rotate-180 tracking-wide">
+              More Services
+            </span>
+          </button>
 
-      {showMoreServices && (
-        <MoreServicesModal onClose={() => setShowMoreServices(false)} />
+          {showMoreServices && (
+            <MoreServicesModal onClose={() => setShowMoreServices(false)} />
+          )}
+        </>
       )}
     </main>
   );
