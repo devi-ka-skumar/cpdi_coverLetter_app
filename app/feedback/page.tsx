@@ -90,6 +90,14 @@ export default function FeedbackPage() {
         >
           🏠 Home
         </Link>
+        <a
+          href="https://ccny-csm.symplicity.com/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 rounded-full bg-[#EDE7FB] px-4 py-2 text-sm font-bold text-[#7C5CDB]"
+        >
+          🔗 Career Connections
+        </a>
         <Link
           href="/optimize"
           className="inline-flex items-center gap-2 rounded-full bg-[#EDE7FB] px-4 py-2 text-sm font-bold text-[#7C5CDB]"

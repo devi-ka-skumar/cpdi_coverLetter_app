@@ -42,23 +42,32 @@ export default function OptimizePage() {
       return;
     }
 
-    recordAttempt();
-    // TODO: once the AI is connected, kick off the actual request here
-    // using jobDescription, resumeFile, and coverLetterFile from context,
-    // then navigate to /loading immediately and redirect to /feedback
-    // only once the response comes back.
+    // Note: the actual "used a try" recording happens on the loading page,
+    // right before the real API call fires — not here. This ensures a try
+    // is only consumed when an API call is genuinely attempted, not just
+    // because the student clicked Analyze.
     router.push("/loading");
   }
 
   return (
     <main className="min-h-screen bg-[#FAF8F5] px-6 py-12 md:px-16">
       {/* Home link */}
-      <Link
-        href="/"
-        className="inline-flex items-center gap-2 rounded-full bg-[#EDE7FB] px-4 py-2 text-sm font-bold text-[#7C5CDB]"
-      >
-        🏠 Home
-      </Link>
+      <div className="flex gap-3">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 rounded-full bg-[#EDE7FB] px-4 py-2 text-sm font-bold text-[#7C5CDB]"
+        >
+          🏠 Home
+        </Link>
+        <a
+          href="https://ccny-csm.symplicity.com/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 rounded-full bg-[#EDE7FB] px-4 py-2 text-sm font-bold text-[#7C5CDB]"
+        >
+          🔗 Career Connections
+        </a>
+      </div>
 
       {/* Header */}
       <div className="mt-6">
