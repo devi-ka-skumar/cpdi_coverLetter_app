@@ -3,19 +3,32 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 
 export type AnalysisResult = {
-  score: number;
-  strategy: {
-    whatsWorking: string;
+  hasCoverLetterDraft: boolean;
+  message?: string; // only present when hasCoverLetterDraft is false
+  score?: number;
+  categoryScores?: {
+    jobMatch: number;
+    resumeAlignment: number;
+    templateStructure: number;
+    clarityGrammarImpact: number;
+    professionalTone: number;
+  };
+  strategy?: {
+    highlights: string[];
     addressTheseGaps: { gap: string; fix: string }[];
     blueprint: {
       tone: string;
-      suggestedOpening: string;
+      opening: string;
       focus: string;
     };
+    mustHaves: string[];
   };
-  grade: {
+  grade?: {
     keepDoingThis: string[];
     fixImmediately: { problem: string; fix: string }[];
+    spellingGrammar: { incorrect: string; correction: string }[];
+    templateScore: { label: string; met: boolean }[];
+    doThisNow: string;
   };
 };
 

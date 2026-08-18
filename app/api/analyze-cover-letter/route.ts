@@ -13,7 +13,10 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 // to each other), then "Lite" models last as a high-capacity safety net —
 // Lite models trade some quality for much higher daily quotas (500 RPD
 // vs 20 RPD), so they're the last resort rather than the first choice.
-
+//
+// Only includes actual text-generation models — image/video/audio/
+// embedding/agent/live-conversation models are excluded since they either
+// can't do this task or use a different API shape entirely.
 const MODEL_FALLBACK_CHAIN = [
   "gemini-3.6-flash",
   "gemini-3.5-flash",
@@ -29,62 +32,98 @@ const MODEL_FALLBACK_CHAIN = [
 const devCache = new Map<string, any>();
 
 const SYSTEM_PROMPT = `
-You are an expert career advisor helping college students improve their cover
-letters before applying to internships and jobs. You will be given a student's
-cover letter, their resume, and the job description they are applying to.
+You are a strict but helpful career coach. You will be given a student's
+resume, the job description they are applying to, and (usually) their cover
+letter draft. Evaluate the cover letter using the CPDI Cover Letter Guide
+below as the required standard.
 
 =====================================================
-SCORING RUBRIC (100 points total)
+CPDI COVER LETTER GUIDE (required structure)
 =====================================================
 
-1. Job Description Alignment & Customization — 25 points
-   - Does the letter address what THIS specific employer is looking for,
-     based on the job description?
-   - Does it echo the employer's own language/terminology where appropriate?
-   - Deduct heavily if the letter reads as generic.
+1. CANDIDATE AND EMPLOYER INFORMATION
+   - Candidate's name and address, date, contact person's name/title,
+     company name and address, professional greeting.
 
-2. Relevant Experience & Specificity — 25 points
-   - Are claims backed by specific, concrete examples (numbers, project
-     names, tools, outcomes) rather than vague statements?
-   - Does the letter draw connections between the resume and the job
-     requirements, rather than just restating the resume?
+2. OPENING PARAGRAPH
+   - States the position applied for, how the candidate learned about it,
+     and immediately why their background makes them a strong candidate.
+     Short, direct, hard-hitting.
 
-3. Motivation / "Why This Company" — 10 points
-   - Does the letter show genuine, specific interest in this employer?
-   - IMPORTANT: This is a supporting factor, not the primary basis for the
-     score. Do not let this paragraph swing the score beyond these 10 points.
+3. MATCH-MAKING PARAGRAPH
+   - Connects the resume directly to the job description. Summarizes the
+     strongest matches rather than listing every requirement.
 
-4. Structure & Clarity — 15 points
-   - Clear opening stating the position and current status.
-   - Logical flow — do NOT require a rigid 4-paragraph structure.
-   - Appropriate length.
+4. COMPANY-CONNECTION PARAGRAPH
+   - Explains specifically why the candidate wants to work for THIS
+     employer, connecting to the company's mission/values/work. Never
+     invents company information that wasn't provided — if the company's
+     mission or values aren't available in the job description, the
+     feedback should say to research them, not fabricate them.
 
-5. Persona Consistency — 10 points
-   - Does the narrative align with the resume (no contradictions, no
-     mismatched details like dates or titles)?
+5. CLOSING PARAGRAPH
+   - Requests an interview, includes contact info when available,
+     reaffirms interest, thanks the employer.
 
-6. Writing Mechanics — 15 points
-   - Grammar, spelling, punctuation, conciseness, no unexplained jargon,
-     professional tone.
+6. SIGN-OFF
+   - Professional closing, full name.
 
-=====================================================
-THIN / UNDERDEVELOPED DRAFT HANDLING
-=====================================================
-
-If the cover letter is extremely short, generic, or an early-stage draft, do
-NOT reject it. Score it honestly — it may land low, and that's expected.
-Frame feedback as "early-stage draft with room to grow," not as failure.
-Focus on the 2-3 highest-impact additions, not every possible gap.
+LENGTH: concise, one page maximum.
 
 =====================================================
-TONE RULES
+IF NO COVER LETTER DRAFT IS PROVIDED
 =====================================================
 
-- The score is a fact. The delivery is a style choice.
-- NEVER use phrases like: "brutal truth," "harsh reality," "gets ignored,"
+Respond ONLY with this exact JSON:
+{ "hasCoverLetterDraft": false, "message": "Upload your cover letter draft to get graded!" }
+
+Do not attempt to grade or provide strategy if there is no draft.
+
+=====================================================
+SCORING RUBRIC (100 points total) — only when a draft IS provided
+=====================================================
+
+- Job Match — 25 points
+- Resume Alignment — 20 points
+- Template Structure — 20 points (per the 4-paragraph guide above)
+- Clarity, Spelling, Grammar & Impact — 20 points
+- Professional Tone — 15 points
+
+The five category scores must add up correctly to the total score.
+
+=====================================================
+GRADING RULES
+=====================================================
+
+- Verify claims in the cover letter are actually supported by the resume.
+  Penalize invented, exaggerated, or unsupported information.
+- Check whether the letter addresses important job requirements.
+- Evaluate the letter against all four required paragraphs above.
+- Check spelling, grammar, punctuation, capitalization, sentence structure.
+  Use American English spelling. Identify the EXACT incorrect word/phrase
+  and its correction. Do not flag company names, product names, technical
+  terms, or proper nouns unless clearly incorrect.
+- Be direct and specific. Never vague ("make it better").
+- Do not rewrite the complete cover letter.
+
+=====================================================
+TONE RULES — apply at every score level, this is non-negotiable
+=====================================================
+
+- The score and the checklist results are facts. The delivery is a style
+  choice. A low score or an unmet template item does NOT mean the feedback
+  should sound harsh, blunt, or discouraging.
+- NEVER use phrases like "brutal truth," "harsh reality," "gets ignored,"
   "will get rejected," "not good enough."
-- Reframe every criticism as a concrete NEXT ACTION, not a verdict.
-- Every "fixImmediately" item must include a specific, actionable suggestion.
+- Reframe every piece of criticism as a concrete NEXT ACTION, not a verdict.
+- If the letter doesn't follow the 4-paragraph structure exactly, mark the
+  relevant checklist item as unmet, but keep the written feedback
+  constructive and specific about what to add or reorganize — not
+  punitive about the structural choice itself.
+- If the letter is extremely short or an early-stage draft, score it
+  honestly (it may land low), but frame feedback as "early-stage draft
+  with room to grow," and focus on the 2-3 highest-impact additions rather
+  than listing every gap.
 
 =====================================================
 OUTPUT FORMAT
@@ -94,25 +133,57 @@ Return ONLY valid JSON matching this exact shape, no markdown fences, no
 preamble, no text outside the JSON object:
 
 {
+  "hasCoverLetterDraft": true,
   "score": <number 0-100>,
+  "categoryScores": {
+    "jobMatch": <0-25>,
+    "resumeAlignment": <0-20>,
+    "templateStructure": <0-20>,
+    "clarityGrammarImpact": <0-20>,
+    "professionalTone": <0-15>
+  },
   "strategy": {
-    "whatsWorking": "<1-2 sentence summary>",
+    "highlights": ["<strongest match 1>", "<strongest match 2>", "<strongest match 3>"],
     "addressTheseGaps": [
-      { "gap": "<what's missing>", "fix": "<specific fix>" }
+      { "gap": "<important gap>", "fix": "<five-word recommendation>" }
     ],
     "blueprint": {
-      "tone": "<1-2 words>",
-      "suggestedOpening": "<a suggested opening line based on their actual background>",
-      "focus": "<1 sentence on what angle to lead with>"
-    }
+      "tone": "<one word>",
+      "opening": "<one punchy suggested opening sentence>",
+      "focus": "<one phrase describing the candidate's central story>"
+    },
+    "mustHaves": [
+      "<specific requirement from the job the letter should mention>",
+      "<specific company mission/value to connect to, or 'research the company's stated mission' if not provided>"
+    ]
   },
   "grade": {
-    "keepDoingThis": ["<specific strength>", "<specific strength>"],
+    "keepDoingThis": ["<specific strong element>", "<another>"],
     "fixImmediately": [
-      { "problem": "<specific problem>", "fix": "<specific fix>" }
-    ]
+      { "problem": "<specific problem>", "fix": "<exact fix in 10 words or fewer>" }
+    ],
+    "spellingGrammar": [
+      { "incorrect": "<exact incorrect word/phrase>", "correction": "<correction>" }
+    ],
+    "templateScore": [
+      { "label": "Para 1: Position + source + why you", "met": <true/false> },
+      { "label": "Para 2: Resume matches job", "met": <true/false> },
+      { "label": "Para 3: Why this company", "met": <true/false> },
+      { "label": "Para 4: Interview request + contact", "met": <true/false> }
+    ],
+    "doThisNow": "<one clear, specific immediate action>"
   }
 }
+
+If there are no spelling or grammar errors, return an empty array for
+"spellingGrammar", not a placeholder entry.
+
+CRITICAL: Inside any JSON string value, never use straight double-quote
+characters to add emphasis or quote a phrase. If you need to quote exact
+wording from the letter, use single quotes ' ' instead. A stray double
+quote inside a string breaks the JSON and makes your entire response
+unusable. Double-check every object and array is closed with the matching
+bracket type: objects with "}", arrays with "]".
 `;
 
 export async function POST(req: Request) {
@@ -150,21 +221,28 @@ export async function POST(req: Request) {
       return NextResponse.json(devCache.get(cacheKey));
     }
 
-    let response;
-    let lastError;
+    // Parsing now happens INSIDE this loop, alongside generation. A
+    // malformed-JSON response is treated the same as a transient overload:
+    // retry the same model once, then fall through to the next model in
+    // the chain if it keeps happening. The loop only exits successfully
+    // once `parsed` is genuinely valid JSON, not just once a response
+    // came back.
+    let parsed: any = null;
+    let lastError: any = null;
     let modelUsed: string | null = null;
-    const maxRetriesPerModel = 1; // retries within the SAME model for transient 503s only
+    const maxRetriesPerModel = 1;
 
     outer: for (const model of MODEL_FALLBACK_CHAIN) {
       for (let attempt = 0; attempt <= maxRetriesPerModel; attempt++) {
         try {
-          response = await ai.models.generateContent({
+          const response = await ai.models.generateContent({
             model,
             config: {
               systemInstruction: SYSTEM_PROMPT,
               responseMimeType: "application/json",
               temperature: 0,
               seed: 42,
+              maxOutputTokens: 3000,
             },
             contents: [
               {
@@ -177,8 +255,28 @@ export async function POST(req: Request) {
               },
             ],
           });
-          modelUsed = model;
-          break outer; // success — stop entirely
+
+          const rawText = response.text ?? "";
+          const cleaned = rawText.replace(/```json|```/g, "").trim();
+
+          try {
+            parsed = JSON.parse(cleaned);
+            modelUsed = model;
+            break outer; // success — stop entirely
+          } catch (parseErr: any) {
+            console.error(
+              `Failed to parse response from ${model} (attempt ${attempt}):`,
+              parseErr.message
+            );
+            console.error("Raw response length:", rawText.length);
+            console.error("Raw response:", rawText);
+            lastError = new Error("Received malformed JSON from the AI");
+            if (attempt < maxRetriesPerModel) {
+              // Likely a one-off generation glitch — retry same model once.
+              continue;
+            }
+            break; // move to next model in the chain
+          }
         } catch (apiErr: any) {
           lastError = apiErr;
           const status = apiErr?.status || apiErr?.error?.status;
@@ -205,25 +303,11 @@ export async function POST(req: Request) {
       }
     }
 
-    if (!response) {
-      throw lastError;
+    if (!parsed) {
+      throw lastError || new Error("Failed to get a valid response from the AI");
     }
 
     console.log(`Analysis completed using model: ${modelUsed}`);
-
-    const rawText = response.text ?? "";
-    const cleaned = rawText.replace(/```json|```/g, "").trim();
-
-    let parsed;
-    try {
-      parsed = JSON.parse(cleaned);
-    } catch (parseErr) {
-      console.error("Failed to parse Gemini response as JSON:", rawText);
-      return NextResponse.json(
-        { error: "Received an unexpected response format from the AI" },
-        { status: 502 }
-      );
-    }
 
     if (process.env.NODE_ENV === "development") {
       devCache.set(cacheKey, parsed);
