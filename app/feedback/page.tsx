@@ -12,7 +12,6 @@ export default function FeedbackPage() {
   const [remaining, setRemaining] = useState(5);
 
   useEffect(() => {
-    // Client-side only, since localStorage isn't available during SSR.
     setRemaining(getRemainingAttempts());
   }, []);
 
@@ -61,6 +60,26 @@ export default function FeedbackPage() {
 
   const r = analysisResult!;
 
+  // The AI itself determined there's no real draft to grade (edge case —
+  // the input page should prevent this, but the prompt has this fallback).
+  if (r.hasCoverLetterDraft === false) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#FAF8F5] px-6">
+        <div className="w-full max-w-md rounded-2xl bg-white p-10 text-center shadow-sm">
+          <h1 className="text-2xl font-extrabold text-[#1A1523]">
+            📄 {r.message || "Upload your cover letter draft to get graded!"}
+          </h1>
+          <Link
+            href="/optimize"
+            className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#7C5CDB] px-6 py-3 text-sm font-bold text-white"
+          >
+            Go to Cover Letter Optimizer
+          </Link>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-[#FAF8F5] px-6 py-12 md:px-16">
       {/* Top nav pills */}
@@ -93,15 +112,25 @@ export default function FeedbackPage() {
             Cover Letter Strategy
           </h2>
 
-          <p className="mt-4 text-sm text-[#5B5468]">
-            {r.strategy.whatsWorking}
+          <p className="mt-6 text-xs font-bold tracking-wide text-[#7C5CDB]">
+            HIGHLIGHT THESE 3 THINGS
           </p>
+          <ol className="mt-3 space-y-3">
+            {r.strategy?.highlights.map((item, i) => (
+              <li key={i} className="flex gap-3 text-sm text-[#1A1523]">
+                <span className="flex h-6 w-6 flex-none items-center justify-center rounded-full bg-[#EDE7FB] text-xs font-bold text-[#7C5CDB]">
+                  {i + 1}
+                </span>
+                <span className="pt-0.5">{item}</span>
+              </li>
+            ))}
+          </ol>
 
           <p className="mt-6 text-xs font-bold tracking-wide text-[#7C5CDB]">
             ADDRESS THESE GAPS
           </p>
           <div className="mt-3 space-y-3">
-            {r.strategy.addressTheseGaps.map((item, i) => (
+            {r.strategy?.addressTheseGaps.map((item, i) => (
               <div key={i} className="rounded-xl bg-[#F3EFFC] p-4">
                 <p className="text-sm text-[#5B5468]">{item.gap}</p>
                 <p className="mt-1 text-sm text-[#9B96A8]">↓</p>
@@ -116,13 +145,24 @@ export default function FeedbackPage() {
             COVER LETTER BLUEPRINT
           </p>
           <div className="mt-3 space-y-2 text-sm">
-            <BlueprintRow label="Tone" value={r.strategy.blueprint.tone} />
+            <BlueprintRow label="Tone" value={r.strategy?.blueprint.tone ?? ""} />
             <BlueprintRow
               label="Opening"
-              value={r.strategy.blueprint.suggestedOpening}
+              value={r.strategy?.blueprint.opening ?? ""}
             />
-            <BlueprintRow label="Focus" value={r.strategy.blueprint.focus} />
+            <BlueprintRow label="Focus" value={r.strategy?.blueprint.focus ?? ""} />
           </div>
+
+          <p className="mt-6 text-xs font-bold tracking-wide text-[#7C5CDB]">
+            MUST-HAVES
+          </p>
+          <ul className="mt-3 space-y-1.5">
+            {r.strategy?.mustHaves.map((item, i) => (
+              <li key={i} className="text-sm text-[#1A1523]">
+                ✓ {item}
+              </li>
+            ))}
+          </ul>
         </div>
 
         {/* Grade My Cover Letter */}
@@ -131,17 +171,47 @@ export default function FeedbackPage() {
             Grade My Cover Letter
           </h2>
 
-          <ScoreRing score={r.score} />
+          <ScoreRing score={r.score ?? 0} />
+
+          {r.categoryScores && (
+            <div className="mt-6 space-y-2">
+              <CategoryRow
+                label="Job Match"
+                score={r.categoryScores.jobMatch}
+                max={25}
+              />
+              <CategoryRow
+                label="Resume Alignment"
+                score={r.categoryScores.resumeAlignment}
+                max={20}
+              />
+              <CategoryRow
+                label="Template Structure"
+                score={r.categoryScores.templateStructure}
+                max={20}
+              />
+              <CategoryRow
+                label="Clarity, Grammar & Impact"
+                score={r.categoryScores.clarityGrammarImpact}
+                max={20}
+              />
+              <CategoryRow
+                label="Professional Tone"
+                score={r.categoryScores.professionalTone}
+                max={15}
+              />
+            </div>
+          )}
 
           <div className="mt-6 rounded-xl bg-[#EAF7EE] p-4">
             <p className="text-xs font-bold tracking-wide text-[#2F9E5B]">
               KEEP DOING THIS
             </p>
             <p className="mt-2 text-sm text-[#1A1523]">
-              {r.grade.keepDoingThis.map((item, i) => (
+              {r.grade?.keepDoingThis.map((item, i) => (
                 <span key={i}>
                   ✓ {item}
-                  {i < r.grade.keepDoingThis.length - 1 && " · "}
+                  {i < (r.grade?.keepDoingThis.length ?? 0) - 1 && " · "}
                 </span>
               ))}
             </p>
@@ -151,7 +221,7 @@ export default function FeedbackPage() {
             <p className="text-xs font-bold tracking-wide text-[#B4711F]">
               FIX IMMEDIATELY
             </p>
-            {r.grade.fixImmediately.map((item, i) => (
+            {r.grade?.fixImmediately.map((item, i) => (
               <div key={i} className="rounded-xl bg-[#FBF0E3] p-4">
                 <p className="text-sm text-[#1A1523]">{item.problem}</p>
                 <p className="mt-1 text-sm text-[#9B96A8]">→</p>
@@ -160,6 +230,54 @@ export default function FeedbackPage() {
                 </p>
               </div>
             ))}
+          </div>
+
+          <p className="mt-6 text-xs font-bold tracking-wide text-[#9B96A8]">
+            SPELLING & GRAMMAR
+          </p>
+          {r.grade?.spellingGrammar.length ? (
+            <div className="mt-3 space-y-1.5">
+              {r.grade.spellingGrammar.map((item, i) => (
+                <p key={i} className="text-sm text-[#1A1523]">
+                  <span className="text-[#B4711F] line-through">
+                    {item.incorrect}
+                  </span>{" "}
+                  → <span className="font-bold">{item.correction}</span>
+                </p>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-3 text-sm text-[#2F9E5B]">
+              ✓ No spelling or grammar errors found.
+            </p>
+          )}
+
+          <p className="mt-6 text-xs font-bold tracking-wide text-[#9B96A8]">
+            TEMPLATE SCORE
+          </p>
+          <div className="mt-3 space-y-2">
+            {r.grade?.templateScore.map((item) => (
+              <div
+                key={item.label}
+                className="flex items-center justify-between text-sm text-[#1A1523]"
+              >
+                <span>{item.label}</span>
+                {item.met ? (
+                  <span className="text-[#2F9E5B]">☑</span>
+                ) : (
+                  <span className="text-[#9B96A8]">☐</span>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-6 rounded-xl bg-[#F3EFFC] p-4">
+            <p className="text-xs font-bold tracking-wide text-[#7C5CDB]">
+              DO THIS NOW
+            </p>
+            <p className="mt-2 text-sm font-bold text-[#1A1523]">
+              {r.grade?.doThisNow}
+            </p>
           </div>
         </div>
       </div>
@@ -174,9 +292,7 @@ export default function FeedbackPage() {
         <span aria-hidden="true" className="text-base">
           🎓
         </span>
-        <span
-          className="[writing-mode:vertical-rl] rotate-180 tracking-wide"
-        >
+        <span className="[writing-mode:vertical-rl] rotate-180 tracking-wide">
           More Services
         </span>
       </button>
@@ -195,6 +311,25 @@ function BlueprintRow({ label, value }: { label: string; value: string }) {
         {label}
       </span>
       <span className="text-[#5B5468]">{value}</span>
+    </div>
+  );
+}
+
+function CategoryRow({
+  label,
+  score,
+  max,
+}: {
+  label: string;
+  score: number;
+  max: number;
+}) {
+  return (
+    <div className="flex items-center justify-between text-sm">
+      <span className="text-[#5B5468]">{label}</span>
+      <span className="font-bold text-[#1A1523]">
+        {score}/{max}
+      </span>
     </div>
   );
 }
