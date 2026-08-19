@@ -1,15 +1,15 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useCoverLetterContext } from "../context/CoverLetterContext";
-import MoreServicesModal from "../components/moreServicesModal";
+import MoreServicesButton from "../components/moreServicesButton";
 import ErrorModal from "../components/errorModal";
 import { getRemainingAttempts } from "../../lib/rateLimiter";
 
 export default function FeedbackPage() {
   const { analysisResult, analysisError } = useCoverLetterContext();
-  const [showMoreServices, setShowMoreServices] = useState(false);
   const [remaining, setRemaining] = useState(5);
 
   useEffect(() => {
@@ -73,31 +73,47 @@ export default function FeedbackPage() {
     <main className="min-h-screen bg-[#FAF8F5] px-6 py-12 md:px-16">
       {errorModal}
 
-      {/* Top nav pills */}
-      <div className="flex gap-3">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 rounded-full bg-[#EDE7FB] px-4 py-2 text-sm font-bold text-[#7C5CDB]"
-        >
-          🏠 Home
-        </Link>
-        <a
-          href="https://ccny-csm.symplicity.com/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 rounded-full bg-[#EDE7FB] px-4 py-2 text-sm font-bold text-[#7C5CDB]"
-        >
-          🔗 Career Connections
-        </a>
-        <Link
-          href="/optimize"
-          className="inline-flex items-center gap-2 rounded-full bg-[#EDE7FB] px-4 py-2 text-sm font-bold text-[#7C5CDB]"
-        >
-          ✏️ Edit
-        </Link>
+      {/* Top nav row with centered logo */}
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
+        <div className="flex justify-self-start gap-3">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2.5 rounded-full bg-[#EDE7FB] px-5 py-2.5 text-base font-bold text-[#7C5CDB] transition hover:bg-[#D9D2F0]"
+          >
+            🏠 Home
+          </Link>
+          {hasValidResult && (
+            <Link
+              href="/optimize"
+              className="inline-flex items-center gap-2.5 rounded-full bg-[#EDE7FB] px-5 py-2.5 text-base font-bold text-[#7C5CDB] transition hover:bg-[#D9D2F0]"
+            >
+              ✏️ Edit Your Responses
+            </Link>
+          )}
+        </div>
+        <div className="justify-self-center">
+          <Image
+            src="/cpdi-logo.png"
+            alt="CCNY Career & Professional Development Institute logo"
+            width={340}
+            height={101}
+            priority
+          />
+        </div>
+        <div className="flex justify-self-end gap-3">
+          {hasValidResult && <MoreServicesButton />}
+          <a
+            href="https://ccny-csm.symplicity.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2.5 rounded-full bg-[#EDE7FB] px-5 py-2.5 text-base font-bold text-[#7C5CDB] transition hover:bg-[#D9D2F0]"
+          >
+            🔗 Career Connections
+          </a>
+        </div>
       </div>
 
-      <h1 className="mt-6 text-4xl font-extrabold tracking-tight text-[#1A1523]">
+      <h1 className="mt-8 text-4xl font-extrabold tracking-tight text-[#1A1523]">
         Your Results
       </h1>
 
@@ -289,29 +305,6 @@ export default function FeedbackPage() {
               </div>
             </div>
           </div>
-        </>
-      )}
-
-      {/* More Services — persistent side tab, only when there's a real result to view */}
-      {hasValidResult && (
-        <>
-          <button
-            type="button"
-            onClick={() => setShowMoreServices(true)}
-            aria-label="More Services from CPDI"
-            className="fixed right-0 top-1/2 z-40 flex -translate-y-1/2 items-center gap-2 rounded-l-2xl bg-[#7C5CDB] px-3 py-5 text-sm font-bold text-white shadow-lg transition hover:bg-[#6B4CC7] hover:px-4"
-          >
-            <span aria-hidden="true" className="text-base">
-              🎓
-            </span>
-            <span className="[writing-mode:vertical-rl] rotate-180 tracking-wide">
-              More Services
-            </span>
-          </button>
-
-          {showMoreServices && (
-            <MoreServicesModal onClose={() => setShowMoreServices(false)} />
-          )}
         </>
       )}
     </main>

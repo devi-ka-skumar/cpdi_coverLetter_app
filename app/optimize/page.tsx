@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useCoverLetterContext } from "../context/CoverLetterContext";
+import MoreServicesButton from "../components/moreServicesButton";
 import {
   canAnalyze,
   recordAttempt,
@@ -51,36 +52,39 @@ export default function OptimizePage() {
 
   return (
     <main className="min-h-screen bg-[#FAF8F5] px-6 py-12 md:px-16">
-      {/* Home link */}
-      <div className="flex gap-3">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 rounded-full bg-[#EDE7FB] px-4 py-2 text-sm font-bold text-[#7C5CDB]"
-        >
-          🏠 Home
-        </Link>
-        <a
-          href="https://ccny-csm.symplicity.com/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 rounded-full bg-[#EDE7FB] px-4 py-2 text-sm font-bold text-[#7C5CDB]"
-        >
-          🔗 Career Connections
-        </a>
+      {/* Top nav row with centered logo */}
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
+        <div className="justify-self-start">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2.5 rounded-full bg-[#EDE7FB] px-5 py-2.5 text-base font-bold text-[#7C5CDB] transition hover:bg-[#D9D2F0]"
+          >
+            🏠 Home
+          </Link>
+        </div>
+        <div className="justify-self-center">
+          <Image
+            src="/cpdi-logo.png"
+            alt="CCNY Career & Professional Development Institute logo"
+            width={340}
+            height={101}
+            priority
+          />
+        </div>
+        <div className="flex justify-self-end gap-3">
+          <MoreServicesButton />
+          <a
+            href="https://ccny-csm.symplicity.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2.5 rounded-full bg-[#EDE7FB] px-5 py-2.5 text-base font-bold text-[#7C5CDB] transition hover:bg-[#D9D2F0]"
+          >
+            🔗 Career Connections
+          </a>
+        </div>
       </div>
 
-      {/* Header */}
-      <div className="mt-6">
-        <Image
-          src="/cpdi-logo.png"
-          alt="CCNY Career & Professional Development Institute logo"
-          width={220}
-          height={65}
-          priority
-        />
-      </div>
-
-      <h1 className="mt-4 text-4xl font-extrabold tracking-tight text-[#1A1523] md:text-5xl">
+      <h1 className="mt-8 text-4xl font-extrabold tracking-tight text-[#1A1523] md:text-5xl">
         Cover Letter Optimizer for Students
       </h1>
       <p className="mt-3 text-lg text-[#5B5468]">
@@ -140,7 +144,7 @@ export default function OptimizePage() {
               type="button"
               onClick={handleAnalyze}
               disabled={!jobDescription || !resumeFile || !coverLetterFile}
-              className="inline-flex items-center gap-2 rounded-full bg-[#7C5CDB] px-8 py-4 text-base font-bold text-white transition hover:bg-[#6B4CC7] disabled:cursor-not-allowed disabled:opacity-40"
+              className="inline-flex items-center gap-2.5 rounded-full bg-[#7C5CDB] px-8 py-4 text-base font-bold text-white transition hover:bg-[#6B4CC7] disabled:cursor-not-allowed disabled:opacity-40"
             >
               Analyze My Cover Letter
               <span aria-hidden="true">→</span>
