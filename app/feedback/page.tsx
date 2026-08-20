@@ -187,6 +187,58 @@ export default function FeedbackPage() {
                   </li>
                 ))}
               </ul>
+
+              {r.majorGuidance?.detectedMajor && (
+                <div className="mt-6 rounded-xl bg-[#F3EFFC] p-5">
+                  <p className="text-xs font-bold tracking-wide text-[#7C5CDB]">
+                    TIPS FOR {r.majorGuidance.detectedMajor.toUpperCase()} STUDENTS
+                  </p>
+
+                  {r.majorGuidance.keywords?.length > 0 && (
+                    <div className="mt-3">
+                      <p className="text-xs font-bold text-[#5B5468]">
+                        Keywords employers look for
+                      </p>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {r.majorGuidance.keywords.map((word, i) => (
+                          <span
+                            key={i}
+                            className="rounded-full bg-white px-3 py-1 text-xs font-bold text-[#7C5CDB]"
+                          >
+                            {word}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {r.majorGuidance.qualities?.length > 0 && (
+                    <div className="mt-4">
+                      <p className="text-xs font-bold text-[#5B5468]">
+                        Qualities worth highlighting
+                      </p>
+                      <ul className="mt-2 space-y-1">
+                        {r.majorGuidance.qualities.map((item, i) => (
+                          <li key={i} className="text-sm text-[#1A1523]">
+                            ✓ {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {r.majorGuidance.commonRoles?.length > 0 && (
+                    <div className="mt-4">
+                      <p className="text-xs font-bold text-[#5B5468]">
+                        Common entry-level roles
+                      </p>
+                      <p className="mt-1 text-sm text-[#1A1523]">
+                        {r.majorGuidance.commonRoles.join(" · ")}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Grade My Cover Letter */}
