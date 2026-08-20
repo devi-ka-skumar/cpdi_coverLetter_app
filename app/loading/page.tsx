@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useCoverLetterContext } from "../context/CoverLetterContext";
+import { recordAttempt } from "../../lib/rateLimiter";
 
 export default function LoadingPage() {
   const router = useRouter();
@@ -65,6 +66,11 @@ export default function LoadingPage() {
     }, 300);
 
     async function analyze() {
+      // Record the attempt right before the real API call fires — this is
+      // the only place a try should ever be consumed, since it means a
+      // genuine (non-duplicate) analysis was actually attempted.
+      recordAttempt();
+
       try {
         const formData = new FormData();
         formData.append("jobDescription", jobDescription);
