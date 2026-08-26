@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { useCoverLetterContext } from "../context/CoverLetterContext";
 import MoreServicesButton from "../components/moreServicesButton";
 import ErrorModal from "../components/errorModal";
+import FeedbackTab from "../components/feedbackTab";
 import { getRemainingAttempts } from "../../lib/rateLimiter";
 
 export default function FeedbackPage() {
@@ -112,6 +113,8 @@ export default function FeedbackPage() {
           </a>
         </div>
       </div>
+
+      {hasValidResult && <FeedbackTab />}
 
       <h1 className="mt-8 text-4xl font-extrabold tracking-tight text-[#1A1523]">
         Your Results
