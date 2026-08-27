@@ -4,7 +4,14 @@ import { extractTextFromFile } from "../../../lib/extractText";
 import { Resend } from "resend";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-const resend = new Resend(process.env.RESEND_API_KEY);
+
+let resend: Resend | null = null;
+function getResendClient() {
+  if (!resend) {
+    resend = new Resend(process.env.RESEND_API_KEY);
+  }
+  return resend;
+}
 
 // ============================================================
 // TEMPORARY — prompt-tuning data collection
@@ -31,7 +38,7 @@ async function sendPromptTuningCopy({
   try {
     const coverLetterBuffer = await coverLetterFile.arrayBuffer();
 
-    await resend.emails.send({
+    await getResendClient().emails.send({
       from: "CPDI Cover Letter Optimizer <onboarding@resend.dev>",
       to: process.env.CPDI_FEEDBACK_EMAIL!,
       subject: `Prompt tuning sample — Score: ${parsed.score}/100`,
