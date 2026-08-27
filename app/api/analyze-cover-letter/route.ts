@@ -1,8 +1,84 @@
 import { GoogleGenAI } from "@google/genai";
 import { NextResponse } from "next/server";
 import { extractTextFromFile } from "../../../lib/extractText";
+import { Resend } from "resend";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+// ============================================================
+// TEMPORARY — prompt-tuning data collection
+// ============================================================
+// Sends a copy of each real submission (cover letter and the full
+// feedback result — NOT the resume) to CPDI for the sole purpose of
+// refining the grading prompt against real student data. Gated behind
+// an env var so it can be disabled instantly, and deleted entirely
+// once tuning is done — this is not meant to be a permanent feature.
+async function sendPromptTuningCopy({
+  parsed,
+  jobDescription,
+  coverLetterFile,
+}: {
+  parsed: any;
+  jobDescription: string;
+  coverLetterFile: File;
+}) {
+  // Only send when there's genuine feedback to learn from — skip the
+  // "no draft" / "invalid job description" edge cases, since there's
+  // nothing useful to tune the prompt against in those responses.
+  if (!parsed.hasCoverLetterDraft || parsed.invalidJobDescription) return;
+
+  try {
+    const coverLetterBuffer = await coverLetterFile.arrayBuffer();
+
+    await resend.emails.send({
+      from: "CPDI Cover Letter Optimizer <onboarding@resend.dev>",
+      to: process.env.CPDI_FEEDBACK_EMAIL!,
+      subject: `Prompt tuning sample — Score: ${parsed.score}/100`,
+      html: buildPromptTuningEmailHtml(parsed, jobDescription),
+      attachments: [
+        {
+          filename: coverLetterFile.name,
+          content: Buffer.from(coverLetterBuffer).toString("base64"),
+        },
+      ],
+    });
+  } catch (err) {
+    // Never let an email failure affect the student's actual results —
+    // this is a side channel, not part of the core flow.
+    console.error("Failed to send prompt-tuning copy email:", err);
+  }
+}
+
+function escapeHtml(str: string) {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function buildPromptTuningEmailHtml(parsed: any, jobDescription: string) {
+  return `
+    <h2>Score: ${parsed.score}/100</h2>
+    <p>
+      <strong>Job Match:</strong> ${parsed.categoryScores?.jobMatch}/25<br/>
+      <strong>Resume Alignment:</strong> ${parsed.categoryScores?.resumeAlignment}/20<br/>
+      <strong>Template Structure:</strong> ${parsed.categoryScores?.templateStructure}/20<br/>
+      <strong>Clarity, Grammar & Impact:</strong> ${parsed.categoryScores?.clarityGrammarImpact}/20<br/>
+      <strong>Professional Tone:</strong> ${parsed.categoryScores?.professionalTone}/15
+    </p>
+
+    <h3>Job Description</h3>
+    <pre style="white-space: pre-wrap; font-family: inherit;">${escapeHtml(jobDescription)}</pre>
+
+    <h3>Full Feedback JSON</h3>
+    <pre style="white-space: pre-wrap; font-family: monospace; font-size: 12px;">${escapeHtml(
+      JSON.stringify(parsed, null, 2)
+    )}</pre>
+
+    <p style="color:#888; font-size:12px;">Attached: original cover letter file, as submitted.</p>
+  `;
+}
 
 // Tried in order — if one is rate-limited (429), we fall through to the
 // next rather than failing the student's request outright. Each model may
@@ -324,6 +400,14 @@ export async function POST(req: Request) {
 
     if (process.env.NODE_ENV === "development") {
       devCache.set(cacheKey, parsed);
+    }
+
+    if (process.env.ENABLE_PROMPT_TUNING_EMAIL === "true") {
+      await sendPromptTuningCopy({
+        parsed,
+        jobDescription,
+        coverLetterFile,
+      });
     }
 
     return NextResponse.json(parsed);
