@@ -129,28 +129,37 @@ export default function FeedbackPage() {
               <h2 className="text-xl font-bold text-[#1A1523]">
                 Cover Letter Strategy
               </h2>
-
-              <p className="mt-6 text-xs font-bold tracking-wide text-[#7C5CDB]">
-                HIGHLIGHT THESE 3 THINGS
+              <p className="mt-1 text-sm text-[#9B96A8]">
+                Based on your resume and the job description — here's how to
+                build your next draft.
               </p>
-              <ol className="mt-3 space-y-3">
-                {r.strategy?.highlights.map((item, i) => (
-                  <li key={i} className="flex gap-3 text-sm text-[#1A1523]">
-                    <span className="flex h-6 w-6 flex-none items-center justify-center rounded-full bg-[#EDE7FB] text-xs font-bold text-[#7C5CDB]">
-                      {i + 1}
-                    </span>
-                    <span className="pt-0.5">{item}</span>
-                  </li>
-                ))}
-              </ol>
 
-              <p className="mt-6 text-xs font-bold tracking-wide text-[#7C5CDB]">
-                ADDRESS THESE GAPS
+              <p className="mt-6 text-xs font-bold tracking-wide text-[#2F9E5B]">
+                ALREADY ON YOUR RESUME — HIGHLIGHT THESE 3 THINGS
+              </p>
+              <div className="mt-3 rounded-xl bg-[#EAF7EE] p-4">
+                <ol className="space-y-3">
+                  {r.strategy?.highlights.map((item, i) => (
+                    <li key={i} className="flex gap-3 text-sm text-[#1A1523]">
+                      <span className="flex h-6 w-6 flex-none items-center justify-center rounded-full bg-white text-xs font-bold text-[#2F9E5B]">
+                        {i + 1}
+                      </span>
+                      <span className="pt-0.5">{item}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+
+              <p className="mt-6 text-xs font-bold tracking-wide text-[#B4711F]">
+                WHAT YOUR LETTER IS MISSING
+              </p>
+              <p className="mt-1 text-xs text-[#9B96A8]">
+                Based on the job posting — add these to strengthen your match:
               </p>
               <div className="mt-3 space-y-3">
                 {r.strategy?.addressTheseGaps.map((item, i) => (
-                  <div key={i} className="rounded-xl bg-[#F3EFFC] p-4">
-                    <p className="text-sm text-[#5B5468]">{item.gap}</p>
+                  <div key={i} className="rounded-xl bg-[#FBF0E3] p-4">
+                    <p className="text-sm text-[#1A1523]">{item.gap}</p>
                     <p className="mt-1 text-sm text-[#9B96A8]">↓</p>
                     <p className="mt-1 text-sm font-bold text-[#1A1523]">
                       {item.fix}
@@ -160,9 +169,9 @@ export default function FeedbackPage() {
               </div>
 
               <p className="mt-6 text-xs font-bold tracking-wide text-[#7C5CDB]">
-                COVER LETTER BLUEPRINT
+                SUGGESTED BLUEPRINT FOR YOUR NEXT DRAFT
               </p>
-              <div className="mt-3 space-y-2 text-sm">
+              <div className="mt-3 space-y-2 rounded-xl bg-[#F3EFFC] p-4 text-sm">
                 <BlueprintRow
                   label="Tone"
                   value={r.strategy?.blueprint.tone ?? ""}
@@ -178,7 +187,7 @@ export default function FeedbackPage() {
               </div>
 
               <p className="mt-6 text-xs font-bold tracking-wide text-[#7C5CDB]">
-                MUST-HAVES
+                DON'T FORGET
               </p>
               <ul className="mt-3 space-y-1.5">
                 {r.strategy?.mustHaves.map((item, i) => (
@@ -194,6 +203,9 @@ export default function FeedbackPage() {
               <h2 className="text-xl font-bold text-[#1A1523]">
                 Grade My Cover Letter
               </h2>
+              <p className="mt-1 text-sm text-[#9B96A8]">
+                How the draft you submitted actually reads, line by line.
+              </p>
 
               <ScoreRing score={r.score ?? 0} />
 
@@ -241,10 +253,13 @@ export default function FeedbackPage() {
                 </p>
               </div>
 
-              <div className="mt-4 space-y-3">
-                <p className="text-xs font-bold tracking-wide text-[#B4711F]">
-                  FIX IMMEDIATELY
-                </p>
+              <p className="mt-4 text-xs font-bold tracking-wide text-[#B4711F]">
+                FIX IMMEDIATELY
+              </p>
+              <p className="mt-1 text-xs text-[#9B96A8]">
+                Specific problems found in the letter you submitted:
+              </p>
+              <div className="mt-3 space-y-3">
                 {r.grade?.fixImmediately.map((item, i) => (
                   <div key={i} className="rounded-xl bg-[#FBF0E3] p-4">
                     <p className="text-sm text-[#1A1523]">{item.problem}</p>
