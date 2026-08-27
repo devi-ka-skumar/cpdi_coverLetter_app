@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+let resend: Resend | null = null;
+function getResendClient() {
+  if (!resend) {
+    resend = new Resend(process.env.RESEND_API_KEY);
+  }
+  return resend;
+}
 
 const SMILEY_LABELS: Record<number, string> = {
   1: "Very unhappy",
@@ -26,7 +32,7 @@ export async function POST(req: Request) {
 
     const label = SMILEY_LABELS[rating] ?? "Unknown";
 
-    await resend.emails.send({
+    await getResendClient().emails.send({
       from: "CPDI Cover Letter Optimizer <onboarding@resend.dev>",
       to: process.env.CPDI_FEEDBACK_EMAIL!,
       subject: `App Feedback — ${label} (${rating}/5)`,
