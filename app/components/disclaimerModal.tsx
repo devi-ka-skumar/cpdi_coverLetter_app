@@ -43,6 +43,14 @@ export default function DisclaimerModal() {
               you from scratch.
             </span>
           </li>
+          <li className="flex gap-3">
+            <span className="text-[#7C5CDB]">•</span>
+            <span>
+              To help us improve this tool, we may collect a copy of your
+              cover letter and the feedback results it generates. We do not
+              collect your resume.
+            </span>
+          </li>
         </ul>
 
         <button
