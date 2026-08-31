@@ -305,9 +305,11 @@ export default function FeedbackPage() {
                   >
                     <span>{item.label}</span>
                     {item.met ? (
-                      <span className="text-[#2F9E5B]">☑</span>
+                      <span className="flex h-5 w-5 flex-none items-center justify-center rounded-md border-2 border-[#2F9E5B] bg-white text-base font-bold text-[#2F9E5B]">
+                        ✓
+                      </span>
                     ) : (
-                      <span className="text-[#9B96A8]">☐</span>
+                      <span className="flex h-5 w-5 flex-none items-center justify-center rounded-md border-2 border-[#1A1523] bg-white" />
                     )}
                   </div>
                 ))}
