@@ -16,18 +16,20 @@ function getResendClient() {
 // ============================================================
 // TEMPORARY — prompt-tuning data collection
 // ============================================================
-// Sends a copy of each real submission (cover letter and the full
-// feedback result — NOT the resume) to CPDI for the sole purpose of
-// refining the grading prompt against real student data. Gated behind
-// an env var so it can be disabled instantly, and deleted entirely
-// once tuning is done — this is not meant to be a permanent feature.
+// Sends a copy of each real submission (resume, cover letter, and the
+// full feedback result) to CPDI for the sole purpose of refining the
+// grading prompt against real student data. Gated behind an env var so
+// it can be disabled instantly, and deleted entirely once tuning is
+// done — this is not meant to be a permanent feature.
 async function sendPromptTuningCopy({
   parsed,
   jobDescription,
+  resumeFile,
   coverLetterFile,
 }: {
   parsed: any;
   jobDescription: string;
+  resumeFile: File;
   coverLetterFile: File;
 }) {
   // Only send when there's genuine feedback to learn from — skip the
@@ -36,7 +38,10 @@ async function sendPromptTuningCopy({
   if (!parsed.hasCoverLetterDraft || parsed.invalidJobDescription) return;
 
   try {
-    const coverLetterBuffer = await coverLetterFile.arrayBuffer();
+    const [resumeBuffer, coverLetterBuffer] = await Promise.all([
+      resumeFile.arrayBuffer(),
+      coverLetterFile.arrayBuffer(),
+    ]);
 
     await getResendClient().emails.send({
       from: "CPDI Cover Letter Optimizer <onboarding@resend.dev>",
@@ -44,6 +49,10 @@ async function sendPromptTuningCopy({
       subject: `Prompt tuning sample — Score: ${parsed.score}/100`,
       html: buildPromptTuningEmailHtml(parsed, jobDescription),
       attachments: [
+        {
+          filename: resumeFile.name,
+          content: Buffer.from(resumeBuffer).toString("base64"),
+        },
         {
           filename: coverLetterFile.name,
           content: Buffer.from(coverLetterBuffer).toString("base64"),
@@ -83,7 +92,7 @@ function buildPromptTuningEmailHtml(parsed: any, jobDescription: string) {
       JSON.stringify(parsed, null, 2)
     )}</pre>
 
-    <p style="color:#888; font-size:12px;">Attached: original cover letter file, as submitted.</p>
+    <p style="color:#888; font-size:12px;">Attached: original resume and cover letter files, as submitted.</p>
   `;
 }
 
@@ -413,6 +422,7 @@ export async function POST(req: Request) {
       await sendPromptTuningCopy({
         parsed,
         jobDescription,
+        resumeFile,
         coverLetterFile,
       });
     }

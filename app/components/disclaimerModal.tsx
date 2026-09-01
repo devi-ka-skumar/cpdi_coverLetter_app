@@ -47,8 +47,7 @@ export default function DisclaimerModal() {
             <span className="text-[#7C5CDB]">•</span>
             <span>
               To help us improve this tool, we may collect a copy of your
-              cover letter and the feedback results it generates. We do not
-              collect your resume.
+              resume, cover letter, and the feedback results it generates.
             </span>
           </li>
         </ul>
