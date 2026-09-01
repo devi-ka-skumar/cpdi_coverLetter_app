@@ -31,6 +31,10 @@ export type AnalysisResult = {
     templateScore: { label: string; met: boolean }[];
     doThisNow: string;
   };
+  aiLikelihood?: {
+    level: "Low" | "Medium" | "High";
+    note: string | null;
+  };
 };
 
 type CoverLetterContextType = {

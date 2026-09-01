@@ -242,6 +242,19 @@ export default function FeedbackPage() {
                 </div>
               )}
 
+              {r.aiLikelihood &&
+                r.aiLikelihood.level !== "Low" &&
+                r.aiLikelihood.note && (
+                  <div className="mt-4 rounded-xl bg-[#FBF0E3] p-4">
+                    <p className="text-xs font-bold tracking-wide text-[#B4711F]">
+                      🤖 AI WRITING LIKELIHOOD: {r.aiLikelihood.level.toUpperCase()}
+                    </p>
+                    <p className="mt-2 text-sm text-[#1A1523]">
+                      {r.aiLikelihood.note}
+                    </p>
+                  </div>
+                )}
+
               <div className="mt-6 rounded-xl bg-[#EAF7EE] p-4">
                 <p className="text-xs font-bold tracking-wide text-[#2F9E5B]">
                   KEEP DOING THIS

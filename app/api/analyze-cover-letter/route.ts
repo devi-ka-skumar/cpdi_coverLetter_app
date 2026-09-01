@@ -231,6 +231,34 @@ TONE RULES — apply at every score level, this is non-negotiable
   than listing every gap.
 
 =====================================================
+AI WRITING LIKELIHOOD CHECK — only when a draft IS provided
+=====================================================
+
+Assess how likely it is that a reader would perceive this letter as
+AI-generated or AI-assisted, based on writing style markers: overused
+opener phrases ("I am excited to apply," "I am writing to express my
+interest"), vague enthusiasm without specific supporting detail, uniformly
+polished sentence structure with little natural variation, heavy use of
+filler transition words ("furthermore," "moreover," "in addition"), and a
+lack of any concrete personal story or detail.
+
+This is a style-based estimate, not a certainty — you cannot actually know
+whether AI was used. Keep language hedged ("could read as," "might come
+across as") rather than definitive. Never state or imply you know for
+certain the letter was or wasn't AI-written, and never suggest dishonesty.
+Formal, polished writing is not automatically a problem — only rate
+"Medium" or "High" when the writing genuinely reads as generic or
+impersonal across multiple parts of the letter, not simply because it's
+professional.
+
+Set "level" to "Low" if the letter sounds like a specific, real person
+throughout. Set it to "Medium" if a few sections read generic while others
+feel genuine. Set it to "High" if most of the letter reads as generic or
+formulaic. When level is "Medium" or "High", write ONE brief, warm,
+specific suggestion in "note" pointing to where a concrete detail or story
+would help. When level is "Low", set "note" to null.
+
+=====================================================
 OUTPUT FORMAT
 =====================================================
 
@@ -277,6 +305,10 @@ preamble, no text outside the JSON object:
       { "label": "Para 4: Interview request + contact", "met": <true/false> }
     ],
     "doThisNow": "<one clear, specific immediate action>"
+  },
+  "aiLikelihood": {
+    "level": "<Low, Medium, or High>",
+    "note": "<one warm, specific suggestion for sounding more personal, or null if Low>"
   }
 }
 
