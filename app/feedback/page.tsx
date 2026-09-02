@@ -171,10 +171,10 @@ export default function FeedbackPage() {
                 ))}
               </div>
 
-              <p className="mt-6 text-xs font-bold tracking-wide text-[#7C5CDB]">
+              <p className="mt-6 text-xs font-bold tracking-wide text-[#B4711F]">
                 SUGGESTED BLUEPRINT FOR YOUR NEXT DRAFT
               </p>
-              <div className="mt-3 space-y-2 rounded-xl bg-[#F3EFFC] p-4 text-sm">
+              <div className="mt-3 space-y-2 rounded-xl bg-[#FBF0E3] p-4 text-sm">
                 <BlueprintRow
                   label="Tone"
                   value={r.strategy?.blueprint.tone ?? ""}
@@ -189,7 +189,7 @@ export default function FeedbackPage() {
                 />
               </div>
 
-              <p className="mt-6 text-xs font-bold tracking-wide text-[#7C5CDB]">
+              <p className="mt-6 text-xs font-bold tracking-wide text-[#9B96A8]">
                 DON'T FORGET
               </p>
               <ul className="mt-3 space-y-1.5">
@@ -201,8 +201,8 @@ export default function FeedbackPage() {
               </ul>
 
               {r.majorGuidance?.detectedMajor && (
-                <div className="mt-6 rounded-xl bg-[#F3EFFC] p-5">
-                  <p className="text-xs font-bold tracking-wide text-[#7C5CDB]">
+                <div className="mt-6 rounded-xl bg-[#F5F3F0] p-5">
+                  <p className="text-xs font-bold tracking-wide text-[#9B96A8]">
                     TIPS FOR {r.majorGuidance.detectedMajor.toUpperCase()} STUDENTS
                   </p>
 
@@ -215,7 +215,7 @@ export default function FeedbackPage() {
                         {r.majorGuidance.keywords.map((word, i) => (
                           <span
                             key={i}
-                            className="rounded-full bg-white px-3 py-1 text-xs font-bold text-[#7C5CDB]"
+                            className="rounded-full bg-white px-3 py-1 text-xs font-bold text-[#B4711F]"
                           >
                             {word}
                           </span>
@@ -367,8 +367,8 @@ export default function FeedbackPage() {
                 ))}
               </div>
 
-              <div className="mt-6 rounded-xl bg-[#F3EFFC] p-4">
-                <p className="text-xs font-bold tracking-wide text-[#7C5CDB]">
+              <div className="mt-6 rounded-xl bg-[#FBF0E3] p-4">
+                <p className="text-xs font-bold tracking-wide text-[#B4711F]">
                   DO THIS NOW
                 </p>
                 <p className="mt-2 text-sm font-bold text-[#1A1523]">
@@ -427,7 +427,7 @@ function ScoreRing({ score }: { score: number }) {
             cy="60"
             r={radius}
             fill="none"
-            stroke="#EDE7FB"
+            stroke="#FBF0E3"
             strokeWidth="10"
           />
           <circle
@@ -435,7 +435,7 @@ function ScoreRing({ score }: { score: number }) {
             cy="60"
             r={radius}
             fill="none"
-            stroke="#7C5CDB"
+            stroke="#2F9E5B"
             strokeWidth="10"
             strokeLinecap="round"
             strokeDasharray={circumference}
