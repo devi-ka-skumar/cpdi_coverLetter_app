@@ -31,6 +31,12 @@ export type AnalysisResult = {
     templateScore: { label: string; met: boolean }[];
     doThisNow: string;
   };
+  majorGuidance?: {
+    detectedMajor: string | null;
+    keywords: string[];
+    qualities: string[];
+    commonRoles: string[];
+  };
 };
 
 type CoverLetterContextType = {
