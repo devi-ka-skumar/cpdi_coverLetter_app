@@ -244,9 +244,16 @@ export default function FeedbackPage() {
                       <p className="text-xs font-bold text-[#5B5468]">
                         Common entry-level roles
                       </p>
-                      <p className="mt-1 text-sm text-[#1A1523]">
-                        {r.majorGuidance.commonRoles.join(" · ")}
-                      </p>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {r.majorGuidance.commonRoles.map((role, i) => (
+                          <span
+                            key={i}
+                            className="rounded-full bg-white px-3 py-1 text-xs font-bold text-[#7C5CDB]"
+                          >
+                            {role}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
