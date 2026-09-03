@@ -33,7 +33,8 @@ export type AnalysisResult = {
   };
   aiLikelihood?: {
     level: "Low" | "Medium" | "High";
-    note: string | null;
+    example: string | null;
+    fix: string | null;
   };
   majorGuidance?: {
     detectedMajor: string | null;

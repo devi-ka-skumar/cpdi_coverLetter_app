@@ -171,10 +171,10 @@ export default function FeedbackPage() {
                 ))}
               </div>
 
-              <p className="mt-6 text-xs font-bold tracking-wide text-[#B4711F]">
+              <p className="mt-6 text-xs font-bold tracking-wide text-[#7C5CDB]">
                 SUGGESTED BLUEPRINT FOR YOUR NEXT DRAFT
               </p>
-              <div className="mt-3 space-y-2 rounded-xl bg-[#FBF0E3] p-4 text-sm">
+              <div className="mt-3 space-y-2 rounded-xl bg-[#F3EFFC] p-4 text-sm">
                 <BlueprintRow
                   label="Tone"
                   value={r.strategy?.blueprint.tone ?? ""}
@@ -189,7 +189,7 @@ export default function FeedbackPage() {
                 />
               </div>
 
-              <p className="mt-6 text-xs font-bold tracking-wide text-[#9B96A8]">
+              <p className="mt-6 text-xs font-bold tracking-wide text-[#7C5CDB]">
                 DON'T FORGET
               </p>
               <ul className="mt-3 space-y-1.5">
@@ -201,8 +201,8 @@ export default function FeedbackPage() {
               </ul>
 
               {r.majorGuidance?.detectedMajor && (
-                <div className="mt-6 rounded-xl bg-[#F5F3F0] p-5">
-                  <p className="text-xs font-bold tracking-wide text-[#9B96A8]">
+                <div className="mt-6 rounded-xl bg-[#F3EFFC] p-5">
+                  <p className="text-xs font-bold tracking-wide text-[#7C5CDB]">
                     TIPS FOR {r.majorGuidance.detectedMajor.toUpperCase()} STUDENTS
                   </p>
 
@@ -215,7 +215,7 @@ export default function FeedbackPage() {
                         {r.majorGuidance.keywords.map((word, i) => (
                           <span
                             key={i}
-                            className="rounded-full bg-white px-3 py-1 text-xs font-bold text-[#B4711F]"
+                            className="rounded-full bg-white px-3 py-1 text-xs font-bold text-[#7C5CDB]"
                           >
                             {word}
                           </span>
@@ -303,8 +303,13 @@ export default function FeedbackPage() {
                     {r.aiLikelihood.level} likelihood this reads as AI-generated
                   </p>
                   <p className="mt-2 text-sm text-[#1A1523]">
-                    {r.aiLikelihood.note ||
-                      "Consider adding more specific, personal details to make this sound more like you."}
+                    {r.aiLikelihood.example ||
+                      "A few sentences follow a generic, template-like pattern."}
+                  </p>
+                  <p className="mt-1 text-sm text-[#9B96A8]">→</p>
+                  <p className="mt-1 text-sm font-bold text-[#1A1523]">
+                    {r.aiLikelihood.fix ||
+                      "Rewrite it with a specific, personal detail from your own experience."}
                   </p>
                 </div>
               )}
@@ -382,8 +387,8 @@ export default function FeedbackPage() {
                 ))}
               </div>
 
-              <div className="mt-6 rounded-xl bg-[#FBF0E3] p-4">
-                <p className="text-xs font-bold tracking-wide text-[#B4711F]">
+              <div className="mt-6 rounded-xl bg-[#F3EFFC] p-4">
+                <p className="text-xs font-bold tracking-wide text-[#7C5CDB]">
                   DO THIS NOW
                 </p>
                 <p className="mt-2 text-sm font-bold text-[#1A1523]">
@@ -442,7 +447,7 @@ function ScoreRing({ score }: { score: number }) {
             cy="60"
             r={radius}
             fill="none"
-            stroke="#FBF0E3"
+            stroke="#EDE7FB"
             strokeWidth="10"
           />
           <circle
@@ -450,7 +455,7 @@ function ScoreRing({ score }: { score: number }) {
             cy="60"
             r={radius}
             fill="none"
-            stroke="#2F9E5B"
+            stroke="#7C5CDB"
             strokeWidth="10"
             strokeLinecap="round"
             strokeDasharray={circumference}

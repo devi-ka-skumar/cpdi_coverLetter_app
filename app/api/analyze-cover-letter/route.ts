@@ -235,28 +235,54 @@ AI WRITING LIKELIHOOD CHECK — only when a draft IS provided
 =====================================================
 
 Assess how likely it is that a reader would perceive this letter as
-AI-generated or AI-assisted, based on writing style markers: overused
-opener phrases ("I am excited to apply," "I am writing to express my
-interest"), vague enthusiasm without specific supporting detail, uniformly
-polished sentence structure with little natural variation, heavy use of
-filler transition words ("furthermore," "moreover," "in addition"), and a
-lack of any concrete personal story or detail.
+AI-generated or AI-assisted, based on writing style markers.
+
+VOCABULARY-LEVEL markers: overused opener phrases ("I am excited to
+apply," "I am writing to express my interest"), vague enthusiasm without
+specific supporting detail, heavy use of filler transition words
+("furthermore," "moreover," "in addition").
+
+RHETORICAL-PATTERN markers (check these even in letters with lots of
+specific detail): a repeated "bridge" sentence structure where each body
+paragraph ends by explicitly spelling out its relevance in near-identical
+phrasing — e.g. "This experience reflects...", "which directly translates
+to...", "further strengthening my...", "mirroring the...", "underscores
+my..." — appearing in multiple paragraphs with the same rhetorical shape.
+A single such sentence is normal, professional writing; three or more
+following the same template-like phrasing pattern across the letter is a
+much stronger signal than surface-level buzzwords.
+
+IMPORTANT — do not penalize the required structure: this app requires a
+4-paragraph structure (opening, match-making, company-connection,
+closing), so uniform paragraph-level organization is expected and correct
+— never treat that macro-structure itself as evidence. Only the repeated,
+near-identical *bridge-sentence phrasing* within paragraphs counts as a
+marker, not the fact that paragraphs exist in a consistent order.
 
 This is a style-based estimate, not a certainty — you cannot actually know
 whether AI was used. Keep language hedged ("could read as," "might come
 across as") rather than definitive. Never state or imply you know for
 certain the letter was or wasn't AI-written, and never suggest dishonesty.
-Formal, polished writing is not automatically a problem — only rate
-"Medium" or "High" when the writing genuinely reads as generic or
-impersonal across multiple parts of the letter, not simply because it's
-professional.
+Formal, polished, or detail-rich writing is not automatically a problem —
+weigh the rhetorical-pattern markers alongside the vocabulary markers, not
+either one alone, before rating "Medium" or "High."
 
 Set "level" to "Low" if the letter sounds like a specific, real person
-throughout. Set it to "Medium" if a few sections read generic while others
-feel genuine. Set it to "High" if most of the letter reads as generic or
-formulaic. When level is "Medium" or "High", write ONE brief, warm,
-specific suggestion in "note" pointing to where a concrete detail or story
-would help. When level is "Low", set "note" to null.
+throughout, with natural variation in how ideas connect. Set it to
+"Medium" if a few sections read generic or use the repeated bridge-phrase
+pattern while others feel genuine. Set it to "High" if most of the letter
+reads as generic or relies on that repeated pattern throughout.
+
+When level is "Medium" or "High": set "example" to the SPECIFIC phrase or
+sentence from the letter that best shows the pattern, quoted using single
+quotes (never double quotes). Set "fix" to ONE concrete way to rewrite
+that exact sentence using a specific, believable personal detail — not a
+generic instruction like "add more detail" or "vary your transitions."
+The fix should read like a real sentence the student could actually use,
+adapted to their own background. When level is "Low", set both "example"
+and "fix" to null.
+
+=====================================================
 MAJOR-SPECIFIC GUIDANCE — only when a draft IS provided
 =====================================================
 
@@ -332,7 +358,8 @@ preamble, no text outside the JSON object:
   },
   "aiLikelihood": {
     "level": "<Low, Medium, or High>",
-    "note": "<one warm, specific suggestion for sounding more personal, or null if Low>"
+    "example": "<the specific phrase/sentence from the letter showing the pattern, in single quotes, or null if Low>",
+    "fix": "<one concrete rewritten sentence using a real personal detail, or null if Low>"
   },
   "majorGuidance": {
     "detectedMajor": "<major name, or null if not confidently determined>",
