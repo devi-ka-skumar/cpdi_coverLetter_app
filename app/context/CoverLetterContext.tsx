@@ -35,6 +35,12 @@ export type AnalysisResult = {
     level: "Low" | "Medium" | "High";
     note: string | null;
   };
+  majorGuidance?: {
+    detectedMajor: string | null;
+    keywords: string[];
+    qualities: string[];
+    commonRoles: string[];
+  };
 };
 
 type CoverLetterContextType = {

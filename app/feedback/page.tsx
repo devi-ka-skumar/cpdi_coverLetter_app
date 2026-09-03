@@ -171,10 +171,10 @@ export default function FeedbackPage() {
                 ))}
               </div>
 
-              <p className="mt-6 text-xs font-bold tracking-wide text-[#7C5CDB]">
+              <p className="mt-6 text-xs font-bold tracking-wide text-[#B4711F]">
                 SUGGESTED BLUEPRINT FOR YOUR NEXT DRAFT
               </p>
-              <div className="mt-3 space-y-2 rounded-xl bg-[#F3EFFC] p-4 text-sm">
+              <div className="mt-3 space-y-2 rounded-xl bg-[#FBF0E3] p-4 text-sm">
                 <BlueprintRow
                   label="Tone"
                   value={r.strategy?.blueprint.tone ?? ""}
@@ -189,7 +189,7 @@ export default function FeedbackPage() {
                 />
               </div>
 
-              <p className="mt-6 text-xs font-bold tracking-wide text-[#7C5CDB]">
+              <p className="mt-6 text-xs font-bold tracking-wide text-[#9B96A8]">
                 DON'T FORGET
               </p>
               <ul className="mt-3 space-y-1.5">
@@ -199,6 +199,58 @@ export default function FeedbackPage() {
                   </li>
                 ))}
               </ul>
+
+              {r.majorGuidance?.detectedMajor && (
+                <div className="mt-6 rounded-xl bg-[#F5F3F0] p-5">
+                  <p className="text-xs font-bold tracking-wide text-[#9B96A8]">
+                    TIPS FOR {r.majorGuidance.detectedMajor.toUpperCase()} STUDENTS
+                  </p>
+
+                  {r.majorGuidance.keywords?.length > 0 && (
+                    <div className="mt-3">
+                      <p className="text-xs font-bold text-[#5B5468]">
+                        Keywords employers look for
+                      </p>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {r.majorGuidance.keywords.map((word, i) => (
+                          <span
+                            key={i}
+                            className="rounded-full bg-white px-3 py-1 text-xs font-bold text-[#B4711F]"
+                          >
+                            {word}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {r.majorGuidance.qualities?.length > 0 && (
+                    <div className="mt-4">
+                      <p className="text-xs font-bold text-[#5B5468]">
+                        Qualities worth highlighting
+                      </p>
+                      <ul className="mt-2 space-y-1">
+                        {r.majorGuidance.qualities.map((item, i) => (
+                          <li key={i} className="text-sm text-[#1A1523]">
+                            ✓ {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {r.majorGuidance.commonRoles?.length > 0 && (
+                    <div className="mt-4">
+                      <p className="text-xs font-bold text-[#5B5468]">
+                        Common entry-level roles
+                      </p>
+                      <p className="mt-1 text-sm text-[#1A1523]">
+                        {r.majorGuidance.commonRoles.join(" · ")}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Grade My Cover Letter */}
@@ -242,18 +294,20 @@ export default function FeedbackPage() {
                 </div>
               )}
 
-              {r.aiLikelihood &&
-                r.aiLikelihood.level !== "Low" &&
-                r.aiLikelihood.note && (
-                  <div className="mt-4 rounded-xl bg-[#FBF0E3] p-4">
-                    <p className="text-xs font-bold tracking-wide text-[#B4711F]">
-                      🤖 AI WRITING LIKELIHOOD: {r.aiLikelihood.level.toUpperCase()}
-                    </p>
-                    <p className="mt-2 text-sm text-[#1A1523]">
-                      {r.aiLikelihood.note}
-                    </p>
-                  </div>
-                )}
+              {r.aiLikelihood && r.aiLikelihood.level !== "Low" && (
+                <div className="mt-4 rounded-xl bg-[#FBF0E3] p-4">
+                  <p className="text-xs font-bold tracking-wide text-[#B4711F]">
+                    🤖 POSSIBLE AI CONTENT DETECTOR
+                  </p>
+                  <p className="mt-1 text-xs text-[#9B96A8]">
+                    {r.aiLikelihood.level} likelihood this reads as AI-generated
+                  </p>
+                  <p className="mt-2 text-sm text-[#1A1523]">
+                    {r.aiLikelihood.note ||
+                      "Consider adding more specific, personal details to make this sound more like you."}
+                  </p>
+                </div>
+              )}
 
               <div className="mt-6 rounded-xl bg-[#EAF7EE] p-4">
                 <p className="text-xs font-bold tracking-wide text-[#2F9E5B]">
@@ -328,8 +382,8 @@ export default function FeedbackPage() {
                 ))}
               </div>
 
-              <div className="mt-6 rounded-xl bg-[#F3EFFC] p-4">
-                <p className="text-xs font-bold tracking-wide text-[#7C5CDB]">
+              <div className="mt-6 rounded-xl bg-[#FBF0E3] p-4">
+                <p className="text-xs font-bold tracking-wide text-[#B4711F]">
                   DO THIS NOW
                 </p>
                 <p className="mt-2 text-sm font-bold text-[#1A1523]">
@@ -388,7 +442,7 @@ function ScoreRing({ score }: { score: number }) {
             cy="60"
             r={radius}
             fill="none"
-            stroke="#EDE7FB"
+            stroke="#FBF0E3"
             strokeWidth="10"
           />
           <circle
@@ -396,7 +450,7 @@ function ScoreRing({ score }: { score: number }) {
             cy="60"
             r={radius}
             fill="none"
-            stroke="#7C5CDB"
+            stroke="#2F9E5B"
             strokeWidth="10"
             strokeLinecap="round"
             strokeDasharray={circumference}

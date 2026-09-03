@@ -257,6 +257,30 @@ feel genuine. Set it to "High" if most of the letter reads as generic or
 formulaic. When level is "Medium" or "High", write ONE brief, warm,
 specific suggestion in "note" pointing to where a concrete detail or story
 would help. When level is "Low", set "note" to null.
+MAJOR-SPECIFIC GUIDANCE — only when a draft IS provided
+=====================================================
+
+Identify the student's major or field of study from their resume's
+education section (degree title, coursework, or program name). This is
+separate from the job they're applying to — it's about their academic
+background, not the role.
+
+If a major can be confidently identified, provide:
+- 4-6 keywords or skills that employers commonly look for from candidates
+  in that field, for entry-level roles generally (not just this specific
+  job posting)
+- 2-3 personal qualities or strengths particularly valued in that field
+- 2-3 typical entry-level job titles graduates in that field often pursue
+
+Base this on general, well-established knowledge about the field and its
+typical entry-level hiring — do not invent narrow or unusual claims. If
+the major cannot be confidently determined from the resume, set
+detectedMajor to null and omit keywords/qualities/commonRoles (return
+empty arrays for each).
+
+This section is informational context about the student's field in
+general — it should never contradict or duplicate the job-specific
+strategy already covered above.
 
 =====================================================
 OUTPUT FORMAT
@@ -309,6 +333,12 @@ preamble, no text outside the JSON object:
   "aiLikelihood": {
     "level": "<Low, Medium, or High>",
     "note": "<one warm, specific suggestion for sounding more personal, or null if Low>"
+  },
+  "majorGuidance": {
+    "detectedMajor": "<major name, or null if not confidently determined>",
+    "keywords": ["<keyword/skill 1>", "<keyword/skill 2>"],
+    "qualities": ["<valued quality 1>", "<valued quality 2>"],
+    "commonRoles": ["<typical entry-level title 1>", "<typical entry-level title 2>"]
   }
 }
 
