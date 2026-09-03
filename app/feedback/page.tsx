@@ -389,7 +389,7 @@ export default function FeedbackPage() {
 
               <div className="mt-6 rounded-xl bg-[#F3EFFC] p-4">
                 <p className="text-xs font-bold tracking-wide text-[#7C5CDB]">
-                  DO THIS NOW
+                  START FIXING YOUR COVER LETTER HERE
                 </p>
                 <p className="mt-2 text-sm font-bold text-[#1A1523]">
                   {r.grade?.doThisNow}
