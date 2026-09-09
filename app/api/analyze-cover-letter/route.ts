@@ -5,6 +5,25 @@ import { Resend } from "resend";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
+// Gemini's "thinking" (hidden reasoning before the final answer) is the
+// dominant cost on most calls — often far more than the length of the
+// actual JSON response. The two model generations in our fallback chain
+// use different parameter names for this: 2.5-series models take a
+// numeric thinkingBudget, while 3.x-series models take a thinkingLevel
+// string and can't fully disable thinking (their floor is "minimal").
+// Kept intentionally non-zero/non-minimal for now: this task genuinely
+// requires some reasoning (cross-referencing resume claims against the
+// cover letter, weighting the five-category rubric, catching the
+// AI-likelihood rhetorical patterns), so a full cutoff risks quietly
+// degrading grading quality in exchange for speed. Retest thoroughly
+// against the full suite of test cases before tightening this further.
+function getThinkingConfig(model: string): Record<string, unknown> {
+  if (model.startsWith("gemini-2.5")) {
+    return { thinkingConfig: { thinkingBudget: 512 } };
+  }
+  return { thinkingConfig: { thinkingLevel: "low" } };
+}
+
 let resend: Resend | null = null;
 function getResendClient() {
   if (!resend) {
@@ -122,6 +141,17 @@ const MODEL_FALLBACK_CHAIN = [
 // Dev-only cache so repeated identical test runs don't burn API quota.
 // Resets whenever the dev server restarts. Never active in production.
 const devCache = new Map<string, any>();
+
+// Tracks models that hit a 429 (rate-limited) recently, so subsequent
+// requests skip straight past them instead of re-discovering the same
+// exhaustion on every single submission. This is what actually saves
+// time during a heavy-testing day — without it, every request pays the
+// full round-trip cost of rediscovering the same dead models. Clears
+// after 60 seconds since Gemini's per-minute limits reset faster than
+// daily ones; a model that's out for the day will just get re-flagged
+// quickly on the next request rather than being permanently skipped.
+const rateLimitedUntil = new Map<string, number>();
+const RATE_LIMIT_COOLDOWN_MS = 60 * 1000;
 
 const SYSTEM_PROMPT = `
 You are a strict but helpful career coach. You will be given a student's
@@ -315,6 +345,11 @@ OUTPUT FORMAT
 Return ONLY valid JSON matching this exact shape, no markdown fences, no
 preamble, no text outside the JSON object:
 
+Pay particular attention to the "blueprint" field inside "strategy" — it
+is an object and must be closed with "}", not "]". This specific field
+has been a recurring source of bracket-matching errors; double-check it
+before moving on to "mustHaves".
+
 {
   "hasCoverLetterDraft": true,
   "score": <number 0-100>,
@@ -415,85 +450,86 @@ export async function POST(req: Request) {
       return NextResponse.json(devCache.get(cacheKey));
     }
 
-    // Parsing now happens INSIDE this loop, alongside generation. A
-    // malformed-JSON response is treated the same as a transient overload:
-    // retry the same model once, then fall through to the next model in
-    // the chain if it keeps happening. The loop only exits successfully
-    // once `parsed` is genuinely valid JSON, not just once a response
-    // came back.
+    // One attempt per model, no same-model retries. With temperature: 0
+    // and seed: 42, a malformed or failed response from a given model is
+    // fully deterministic — retrying the same model reproduces the exact
+    // same failure and wastes a full round trip for nothing. On any
+    // failure (parse error, rate limit, overload), move straight to the
+    // next model in the chain instead.
     let parsed: any = null;
     let lastError: any = null;
     let modelUsed: string | null = null;
-    const maxRetriesPerModel = 1;
+    const startTime = Date.now();
+    let attemptsCount = 0;
 
     outer: for (const model of MODEL_FALLBACK_CHAIN) {
-      for (let attempt = 0; attempt <= maxRetriesPerModel; attempt++) {
-        try {
-          const response = await ai.models.generateContent({
-            model,
-            config: {
-              systemInstruction: SYSTEM_PROMPT,
-              responseMimeType: "application/json",
-              temperature: 0,
-              seed: 42,
-              maxOutputTokens: 3000,
+      const cooldownUntil = rateLimitedUntil.get(model);
+      if (cooldownUntil && Date.now() < cooldownUntil) {
+        console.log(`Skipping ${model} — still in rate-limit cooldown`);
+        continue;
+      }
+
+      try {
+        attemptsCount++;
+        const response = await ai.models.generateContent({
+          model,
+          config: {
+            systemInstruction: SYSTEM_PROMPT,
+            responseMimeType: "application/json",
+            temperature: 0,
+            seed: 42,
+            maxOutputTokens: 4096,
+            ...getThinkingConfig(model),
+          },
+          contents: [
+            {
+              role: "user",
+              parts: [
+                {
+                  text: `JOB DESCRIPTION:\n${jobDescription}\n\nRESUME:\n${resumeText}\n\nCOVER LETTER:\n${coverLetterText}`,
+                },
+              ],
             },
-            contents: [
-              {
-                role: "user",
-                parts: [
-                  {
-                    text: `JOB DESCRIPTION:\n${jobDescription}\n\nRESUME:\n${resumeText}\n\nCOVER LETTER:\n${coverLetterText}`,
-                  },
-                ],
-              },
-            ],
-          });
+          ],
+        });
 
-          const rawText = response.text ?? "";
-          const cleaned = rawText.replace(/```json|```/g, "").trim();
-
-          try {
-            parsed = JSON.parse(cleaned);
-            modelUsed = model;
-            break outer; // success — stop entirely
-          } catch (parseErr: any) {
-            console.error(
-              `Failed to parse response from ${model} (attempt ${attempt}):`,
-              parseErr.message
-            );
-            console.error("Raw response length:", rawText.length);
-            console.error("Raw response:", rawText);
-            lastError = new Error("Received malformed JSON from the AI");
-            if (attempt < maxRetriesPerModel) {
-              // Likely a one-off generation glitch — retry same model once.
-              continue;
-            }
-            break; // move to next model in the chain
-          }
-        } catch (apiErr: any) {
-          lastError = apiErr;
-          const status = apiErr?.status || apiErr?.error?.status;
-          const isRateLimited = status === 429 || status === "RESOURCE_EXHAUSTED";
-          const isOverloaded = status === 503 || status === "UNAVAILABLE";
-
-          if (isRateLimited) {
-            // This model's quota is exhausted — move to the next model
-            // immediately, don't waste a retry on the same one.
-            console.warn(`${model} rate-limited, falling back to next model`);
-            break;
-          }
-
-          if (isOverloaded && attempt < maxRetriesPerModel) {
-            // Transient overload — brief backoff, retry same model once.
-            await new Promise((resolve) => setTimeout(resolve, 1000 * (attempt + 1)));
-            continue;
-          }
-
-          // Non-retryable error, or retries exhausted on this model —
-          // still try the next model in the chain rather than giving up.
-          break;
+        const rawText = response.text ?? "";
+        const usage = response.usageMetadata as any;
+        if (usage) {
+          console.log(
+            `${model} token usage — prompt: ${usage.promptTokenCount ?? "?"}, ` +
+              `thinking: ${usage.thoughtsTokenCount ?? "?"}, ` +
+              `output: ${usage.candidatesTokenCount ?? "?"}`
+          );
         }
+        const cleaned = rawText.replace(/```json|```/g, "").trim();
+
+        try {
+          parsed = JSON.parse(cleaned);
+          modelUsed = model;
+          break outer; // success — stop entirely
+        } catch (parseErr: any) {
+          console.error(`Failed to parse response from ${model}:`, parseErr.message);
+          console.error("Raw response length:", rawText.length);
+          console.error("Raw response:", rawText);
+          lastError = new Error("Received malformed JSON from the AI");
+          continue; // move to next model — retrying this one would be pointless
+        }
+      } catch (apiErr: any) {
+        lastError = apiErr;
+        const status = apiErr?.status || apiErr?.error?.status;
+        const isRateLimited = status === 429 || status === "RESOURCE_EXHAUSTED";
+        const isOverloaded = status === 503 || status === "UNAVAILABLE";
+
+        if (isRateLimited) {
+          console.warn(`${model} rate-limited, falling back to next model`);
+          rateLimitedUntil.set(model, Date.now() + RATE_LIMIT_COOLDOWN_MS);
+        } else if (isOverloaded) {
+          console.warn(`${model} overloaded (503), falling back to next model`);
+          rateLimitedUntil.set(model, Date.now() + RATE_LIMIT_COOLDOWN_MS);
+        }
+        // Any other error — still try the next model rather than giving up.
+        continue;
       }
     }
 
@@ -501,7 +537,9 @@ export async function POST(req: Request) {
       throw lastError || new Error("Failed to get a valid response from the AI");
     }
 
-    console.log(`Analysis completed using model: ${modelUsed}`);
+    console.log(
+      `Analysis completed using model: ${modelUsed} | ${attemptsCount} attempt(s) | ${Date.now() - startTime}ms`
+    );
 
     if (process.env.NODE_ENV === "development") {
       devCache.set(cacheKey, parsed);
