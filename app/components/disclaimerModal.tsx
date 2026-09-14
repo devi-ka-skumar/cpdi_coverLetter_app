@@ -50,6 +50,22 @@ export default function DisclaimerModal() {
               resume, cover letter, and the feedback results it generates.
             </span>
           </li>
+          <li className="flex gap-3">
+            <span className="text-[#7C5CDB]">•</span>
+            <span>
+              New to cover letters, or is this your first draft? Check out
+              the{" "}
+              <a
+                href="/cover-letter-guide.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-bold text-[#7C5CDB] underline hover:text-[#6B4CC7]"
+              >
+                CPDI Cover Letter Guide
+              </a>{" "}
+              before you start.
+            </span>
+          </li>
         </ul>
 
         <button

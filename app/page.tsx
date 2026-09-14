@@ -71,6 +71,20 @@ export default function LandingPage() {
           Get Started
           <span aria-hidden="true">→</span>
         </a>
+
+        {/* Guide link for first-timers */}
+        <p className="mt-4 text-sm text-[#9B96A8]">
+          Haven&apos;t written a cover letter before?{" "}
+          <a
+            href="/cover-letter-guide.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-bold text-[#7C5CDB] underline hover:text-[#6B4CC7]"
+          >
+            Check out the CPDI Cover Letter Guide
+          </a>{" "}
+          to get started.
+        </p>
       </div>
     </main>
   );

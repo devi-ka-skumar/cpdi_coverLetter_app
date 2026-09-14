@@ -124,6 +124,7 @@ export default function OptimizePage() {
           subtitle="Your current draft, even a rough one"
           file={coverLetterFile}
           onFileSelect={setCoverLetterFile}
+          guideLink
         />
       </div>
 
@@ -164,11 +165,13 @@ function UploadCard({
   subtitle,
   file,
   onFileSelect,
+  guideLink = false,
 }: {
   title: string;
   subtitle: string;
   file: File | null;
   onFileSelect: (file: File | null) => void;
+  guideLink?: boolean;
 }) {
   const [isDragging, setIsDragging] = useState(false);
 
@@ -182,6 +185,19 @@ function UploadCard({
     <div className="rounded-2xl bg-white p-6 shadow-sm">
       <h2 className="text-lg font-bold text-[#1A1523]">{title}</h2>
       <p className="mt-1 text-sm text-[#5B5468]">{subtitle}</p>
+      {guideLink && (
+        <p className="mt-1 text-xs text-[#9B96A8]">
+          Haven&apos;t started yet?{" "}
+          <a
+            href="/cover-letter-guide.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-bold text-[#7C5CDB] underline hover:text-[#6B4CC7]"
+          >
+            See the CPDI Cover Letter Guide
+          </a>
+        </p>
+      )}
 
       {file && (
         <div className="mt-4 flex items-center gap-3 rounded-xl border border-[#C9E6D3] bg-[#F1FAF4] px-4 py-3">
